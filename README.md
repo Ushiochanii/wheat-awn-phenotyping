@@ -73,7 +73,13 @@ Awn Studio was built to reduce that manual workload while keeping the result ins
 
 ## 🧭 From a digitized image to awn length
 
-The animation below shows the core measurement principle from raw image evidence to a final awn-length measurement. Rather than measuring directly from fragmented segmentation masks, Awn Studio progressively reconstructs a measurable awn path, selects the representative awn for each spikelet, and converts the reconstructed path into a calibrated physical length.
+The original demo input is shown first, followed by the animation of the same image moving through the measurement pipeline. Rather than measuring directly from fragmented segmentation masks, Awn Studio progressively reconstructs a measurable awn path, selects the representative awn for each spikelet, and converts the reconstructed path into a calibrated physical length.
+
+<p align="center">
+  <img src="app/awn_studio/demo.jpg" alt="Original Awn Studio demo input image" width="920">
+</p>
+
+<p align="center"><sub>Original demo input.</sub></p>
 
 <p align="center">
   <img src="docs/assets/readme/pipeline-principle.gif" alt="Awn Studio pipeline from segmentation evidence through awn reconstruction to calibrated measurement" width="920">
