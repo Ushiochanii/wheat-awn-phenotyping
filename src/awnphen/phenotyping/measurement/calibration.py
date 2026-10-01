@@ -66,12 +66,16 @@ def robust_grid_period(peaks):
     peaks = np.asarray(peaks, dtype=float)
     diffs = np.diff(peaks)
 
-    preferred = diffs[(diffs >= 50) & (diffs <= 68)]
-    initial = (
-        float(np.median(preferred))
-        if preferred.size
-        else float(np.median(diffs))
+    initial = float(
+        np.median(
+            diffs[
+                (diffs >= 50)
+                & (diffs <= 68)
+            ]
+        )
     )
+    if not np.isfinite(initial):
+        initial = float(np.median(diffs))
 
     cells = np.maximum(
         1,
@@ -82,7 +86,7 @@ def robust_grid_period(peaks):
         5.0,
         initial * 0.12,
     )
-    period = float(np.median(normalized[keep])) if np.any(keep) else initial
+    period = float(np.median(normalized[keep]))
 
     cells = np.maximum(
         1,
@@ -93,7 +97,7 @@ def robust_grid_period(peaks):
         4.0,
         period * 0.10,
     )
-    period = float(np.median(normalized[keep])) if np.any(keep) else period
+    period = float(np.median(normalized[keep]))
 
     lattice_index = [0]
     for n in cells:

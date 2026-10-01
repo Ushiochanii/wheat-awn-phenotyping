@@ -10,7 +10,18 @@ Python 3.10+ is required.
 git clone https://github.com/Ushiochanii/wheat-awn-phenotyping.git
 cd wheat-awn-phenotyping
 python -m venv .venv
-pip install -e .
+```
+
+Activate the environment, then install:
+
+```bash
+# macOS / Linux
+source .venv/bin/activate
+
+# Windows PowerShell
+# .venv\Scripts\Activate.ps1
+
+python -m pip install -e .
 ```
 
 Run the bundled example:
@@ -25,7 +36,7 @@ For your own image:
 awnphen predict path/to/image.jpg --output runs/my-image
 ```
 
-The canonical YOLO11N checkpoint is downloaded automatically from Hugging Face:
+The canonical YOLO11N checkpoint is downloaded automatically from Hugging Face and pinned to a specific repository revision plus SHA-256 checksum:
 
 `anpanchanii/awnphen-yolo11n`
 
@@ -71,6 +82,6 @@ If you need to use Ultralytics YOLO or the derived checkpoint without the AGPL-3
 
 ## Release status
 
-The canonical Hugging Face model repository is configured and the end-to-end demo has been smoke-tested with the public runtime. The local release staging is technically ready for repository publication after the remaining metadata and repository-hosting details are filled in.
+The canonical Hugging Face model repository is configured, the public repository is live, and the end-to-end demo has been smoke-tested with the packaged runtime. Release checks also verify source/bundle synchronization, package hygiene, JavaScript syntax, and wheel contents.
 
-See `RELEASE_NOTES.md` and `docs/architecture.md`.
+See `RELEASE_NOTES.md`, `docs/architecture.md`, and `docs/code-audit-2026-10-01.md`.

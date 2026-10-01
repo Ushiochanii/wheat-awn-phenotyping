@@ -6,7 +6,7 @@ authors:
   - family-names: "Sun"
     given-names: "Junhao"
     alias: "Ushiochanii"
-version: 0.1.0
+version: 0.1.1
 date-released: 2026-10-01
 license: AGPL-3.0
 repository-code: "https://github.com/Ushiochanii/wheat-awn-phenotyping"

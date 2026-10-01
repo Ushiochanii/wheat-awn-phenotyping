@@ -11,7 +11,13 @@ def auto_calibrate(image: Path) -> float:
     source = cv2.imread(str(image), cv2.IMREAD_COLOR)
     if source is None or source.size == 0:
         raise ValueError(f"Could not read image for calibration: {image}")
-    x_cal, y_cal, _qc, _ = calibrate_grid_v2(source)
+    x_cal, y_cal, qc, _ = calibrate_grid_v2(source)
+    if not bool(qc.get("affine_scale_adequate")):
+        reasons = ", ".join(str(item) for item in qc.get("qc_reasons", ())) or "unspecified QC failure"
+        raise RuntimeError(
+            "Automatic grid calibration failed QC "
+            f"({reasons}). Pass --mm-per-px explicitly after manual calibration."
+        )
     periods = np.asarray(
         [float(x_cal["period_px"]), float(y_cal["period_px"])],
         dtype=np.float64,

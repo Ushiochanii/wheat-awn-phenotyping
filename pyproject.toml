@@ -4,16 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "awnphen"
-version = "0.1.0"
+version = "0.1.1"
 description = "Automated wheat awn phenotyping with segmentation, physical reconstruction, and human review."
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "AGPL-3.0"
 authors = [
   {name = "Sun Junhao"}
 ]
 requires-python = ">=3.10"
 keywords = ["wheat", "awn", "phenotyping", "computer vision", "plant phenotyping"]
-dependencies = ["numpy>=1.24", "Pillow>=10", "PyYAML>=6,<7", "shapely>=2,<3", "scipy>=1.10", "scikit-image>=0.22", "opencv-python>=4.8", "ultralytics>=8.3,<9", "huggingface-hub>=0.25"]
+dependencies = ["numpy>=1.24", "Pillow>=10", "PyYAML>=6,<7", "shapely>=2,<3", "scipy>=1.10", "scikit-image>=0.22", "opencv-python>=4.8", "ultralytics==8.4.140", "huggingface-hub>=0.25"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "build>=1.2"]

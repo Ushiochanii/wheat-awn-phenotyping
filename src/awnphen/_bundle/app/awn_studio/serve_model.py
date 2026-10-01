@@ -76,10 +76,9 @@ class Handler(WorkbenchHandler):
 
     def allowed_origin(self, origin):
         parsed = urlparse(origin)
-        host = self.headers.get('Host', '').split(':')[0]
         return (
             parsed.scheme == 'http'
-            and parsed.hostname in {host, 'localhost', '127.0.0.1'}
+            and parsed.hostname in {'localhost', '127.0.0.1'}
             and parsed.port in {8000, 8781, self.server.server_port}
         )
 
@@ -254,7 +253,7 @@ class Handler(WorkbenchHandler):
             )
             from report import write_report
             write_report(folder)
-            report=f'/runs/awn_studio/{jid}/image/report.html'
+            report=f'/runs/awn_studio/{jid}/integration_report.html'
             with LOCK:
                 JOBS[jid].pop('preview',None)
                 JOBS[jid].update(

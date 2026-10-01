@@ -1,6 +1,6 @@
-# v0.1.0 release staging
+# v0.1.1 audit-hardening release
 
-AwnPhen 0.1.0 packages the maintained wheat awn phenotyping runtime, Awn Studio, the canonical YOLO11N model binding, one bundled demo image, and lightweight release tests.
+AwnPhen 0.1.1 packages the maintained wheat awn phenotyping runtime, Awn Studio, the canonical YOLO11N model binding, one bundled demo image, and lightweight release tests.
 
 ## Included
 
@@ -29,8 +29,24 @@ License:
 
 - GNU AGPL-3.0
 
+## Audit hardening
+
+A post-publication code audit tightened the release without changing frozen scientific thresholds:
+
+- restored the frozen grid-calibration implementation after detecting release-only drift
+- made automatic calibration fail closed when calibration QC is inadequate
+- replaced the CLI demo with validation page `IMG_9710`, which passes frozen grid QC at 59 px per 5 mm on both axes
+- pinned the canonical Hugging Face model revision and SHA-256
+- pinned Ultralytics to the validated 8.4.140 runtime
+- hardened localhost origin validation
+- removed an obsolete internal launcher
+- corrected the Awn Studio integration-report URL
+- added release hygiene tests and GitHub Actions checks
+
+See `docs/code-audit-2026-10-01.md` for the audit record.
+
 ## Validation
 
-The public runtime has been smoke-tested through the full canonical pipeline on CPU. A built wheel was also unpacked outside the source tree and successfully ran the bundled demo, verifying that Awn Studio and demo assets are included in the distributable package.
+The public runtime has been smoke-tested through the full canonical pipeline on CPU. A built wheel is also unpacked outside the source tree and exercised as part of release validation, verifying that Awn Studio and demo assets are included in the distributable package.
 
 Training pipelines, benchmark history, raw datasets, publication working files, archives, and comparison-model checkpoints are intentionally excluded from the public runtime.
