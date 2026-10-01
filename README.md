@@ -62,7 +62,12 @@ Conventional awn measurement is usually done either directly with a ruler or man
   <img src="docs/assets/readme/why-awn-studio.png" alt="Conventional manual awn measurement workflows" width="920">
 </p>
 
-Both approaches work well at small scale, but become slow and repetitive when hundreds of spikelets need to be measured consistently. Awn Studio was built to reduce that manual workload while keeping the result inspectable and editable before export.
+Both approaches work well at small scale, but become slow and repetitive when hundreds of spikelets need to be measured consistently.
+
+> **Why I built Awn Studio**  
+> In one phenotyping experiment, I manually measured awns from more than 500 accessions, covering nearly 5,000 individual awn instances. The samples had already been digitized, yet tracing and measuring the awns one by one in ImageJ still took more than 100 hours and over two weeks of work. That experience made the bottleneck very clear: the measurement step itself needed to become much faster.
+
+Awn Studio was built to reduce that manual workload while keeping the result inspectable and editable before export.
 
 ---
 
