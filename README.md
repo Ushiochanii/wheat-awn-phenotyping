@@ -59,7 +59,7 @@ Once review is complete, Awn Studio can export the measurements for downstream a
 Conventional awn measurement is usually done either directly with a ruler or manually from digital images in tools such as ImageJ.
 
 <p align="center">
-  <img src="docs/assets/readme/why-awn-studio.png" alt="Conventional manual awn measurement workflows" width="920">
+  <img src="docs/assets/readme/why-awn-studio-cropped.png" alt="Conventional manual awn measurement workflows" width="920">
 </p>
 
 Both approaches work well at small scale, but become slow and repetitive when hundreds of spikelets need to be measured consistently.
