@@ -56,13 +56,13 @@ Once review is complete, Awn Studio can export the measurements for downstream a
 
 ## Why Awn Studio?
 
-Measuring a few awns manually is straightforward. Measuring hundreds of spikelets across digitized pages is slow, repetitive, and difficult to keep consistent.
+Conventional awn measurement is usually done either directly with a ruler or manually from digital images in tools such as ImageJ.
 
-Awns are also unusually challenging image structures: they are long and thin, may overlap neighbouring awns, can be interrupted by reflection or weak contrast, and do not always appear as one clean continuous prediction. A useful phenotyping tool therefore needs to do more than mark pixels. It must turn imperfect image evidence into a measurable path while still allowing the user to verify the result.
+<p align="center">
+  <img src="docs/assets/readme/why-awn-studio.png" alt="Conventional manual awn measurement workflows" width="920">
+</p>
 
-Awn Studio was built around that workflow:
-
-**automatic first pass -> measurable awn path -> human review -> exportable phenotype data**
+Both approaches work well at small scale, but become slow and repetitive when hundreds of spikelets need to be measured consistently. Awn Studio was built to reduce that manual workload while keeping the result inspectable and editable before export.
 
 ---
 
