@@ -3,27 +3,44 @@
 </p>
 
 <p align="center">
-  <strong>Semi-automated wheat awn length measurement from scanned spike images.</strong>
+  <strong>Semi-automated wheat awn length measurement from digitized spikelet images.</strong>
 </p>
 
-Awn Studio is a semi-automated platform for measuring wheat awn length from scanned spike images. It detects spikelets and awns, reconstructs measurable awn centerlines, estimates calibrated lengths, and keeps the user in the loop through an interactive review and correction workflow.
+Awn Studio is a semi-automated platform for measuring wheat awn length from digitized spikelet images. It detects spikelets and awns, reconstructs measurable awn centerlines, estimates calibrated lengths, and keeps the user in the loop through an interactive review and correction workflow.
 
 Instead of treating model predictions as final answers, Awn Studio turns automatic recognition into an editable measurement workflow: the software proposes the awn path, the user can inspect or correct it, and reviewed measurements can be exported for downstream phenotyping analysis.
 
 ---
 
+## From wheat spike to digital sample
+
+Awn Studio measures the long, bristle-like **awns** that extend from wheat spikelets. Before analysis, the plant material is prepared as an organized digital image of detached spikelets.
+
+<p align="center">
+  <img src="docs/assets/readme/sample-preparation.png" alt="From wheat spike to digital sample" width="920">
+</p>
+
+1. **Field material**  
+   Wheat spikes are collected from plants as the starting material.
+
+2. **Whole spike**  
+   Individual spikes are separated from the plant and prepared for spikelet-level observation.
+
+3. **Detached spikelets**  
+   Spikelets are removed from the spike, arranged on grid paper, fixed in place, and digitized into a consistent image for analysis.
+
+4. **Reference measurement**  
+   The same material can also be measured manually in ImageJ to create reference measurements for validation.
+
+---
+
 ## What can Awn Studio do?
 
-A typical workflow starts with a scanned wheat spike image and ends with reviewed, exportable awn-length measurements.
-
-<!-- TODO README-ASSET: full-page automatic measurement GIF
-Suggested story:
-raw scanned page -> automatic recognition -> centerlines -> measured results
--->
+A typical workflow starts with a digitized page of wheat spikelets and ends with reviewed, exportable awn-length measurements.
 
 ### Automatically detect and measure awns
 
-Awn Studio automatically identifies spikelets and awn evidence from scanned pages, reconstructs a representative awn path for each spikelet, and converts that path into a calibrated length measurement.
+Awn Studio automatically identifies spikelets and awn evidence from digitized pages, reconstructs a representative awn path for each spikelet, and converts that path into a calibrated length measurement.
 
 <p align="center">
   <img src="docs/assets/readme/automatic-measurement.gif" alt="Awn Studio automatic measurement demo" width="920">
@@ -49,7 +66,7 @@ Once review is complete, Awn Studio can export the measurements for downstream a
 
 ## Why Awn Studio?
 
-Measuring a few awns manually is straightforward. Measuring hundreds of spikelets across scanned pages is slow, repetitive, and difficult to keep consistent.
+Measuring a few awns manually is straightforward. Measuring hundreds of spikelets across digitized pages is slow, repetitive, and difficult to keep consistent.
 
 Awns are also unusually challenging image structures: they are long and thin, may overlap neighbouring awns, can be interrupted by reflection or weak contrast, and do not always appear as one clean continuous prediction. A useful phenotyping tool therefore needs to do more than mark pixels. It must turn imperfect image evidence into a measurable path while still allowing the user to verify the result.
 
@@ -57,18 +74,14 @@ Awn Studio was built around that workflow:
 
 **automatic first pass -> measurable awn path -> human review -> exportable phenotype data**
 
-<!-- TODO README-ASSET: one representative difficult example.
-Prefer a real case rather than an abstract diagram.
--->
-
 ---
 
-## From a scanned image to awn length
+## From a digitized image to awn length
 
 The public workflow is designed around a simple user-facing sequence:
 
 ```text
-Scanned spike image
+Digitized spikelet page
         |
         v
 Automatic awn & spikelet recognition
@@ -89,25 +102,6 @@ Review & correction in Awn Studio
 Export
 ```
 
-> **Pipeline figure placeholder — static overview**
-
-<!-- TODO README-ASSET:
-Create a clean horizontal/vertical pipeline figure here.
-Keep labels user-facing:
-Input -> Recognition -> Reconstruction -> Measurement -> Review -> Export
-Avoid internal terms such as ownership, closeout, or reconciliation in the overview.
--->
-
-The same process can also be shown as a real running example:
-
-> **Pipeline GIF placeholder — stage-by-stage processing**
-
-<!-- TODO README-ASSET:
-Reuse/adapt the existing stage animation.
-Recommended public labels:
-Input -> Detection -> Reconstruction -> Representative awn -> Measurement
--->
-
 ---
 
 ## How does it work?
@@ -123,25 +117,17 @@ The canonical public model is a YOLO11N instance-segmentation model trained to r
 
 Large scanned pages are processed with overlapping tiles so that thin structures can be detected without reducing the full page to a very small image.
 
-<!-- TODO README-ASSET: compact recognition example -->
-
 ### 2. Awn path reconstruction
 
 Raw predictions are treated as image evidence rather than final measurements. Awn Studio associates compatible fragments with the relevant spikelet and progressively reconstructs candidate awn paths using local geometry and supporting evidence.
 
 A representative path is then selected for measurement.
 
-> **Algorithm GIF placeholder — one spikelet, fragment evidence -> final path**
-
-<!-- ![Awn reconstruction demo](docs/assets/readme/awn-reconstruction.gif) -->
-
 ### 3. Physical measurement
 
 The selected path is normalized to the spikelet root, simplified for stable measurement, and converted from pixels to millimetres using image calibration.
 
 Automatic grid calibration is accepted only when its quality-control checks pass; otherwise the user can provide an explicit manual calibration.
-
-<!-- TODO README-ASSET: measurement / calibration visual -->
 
 ### 4. Human-in-the-loop review
 
@@ -151,19 +137,19 @@ Awn Studio exposes the automatic result rather than hiding it behind a single nu
 
 ## Awn Studio
 
-<!-- TODO README-ASSET: one large UI screenshot or short UI GIF -->
-
 The interactive workspace is designed for reviewing automatic measurements without returning to a separate annotation program.
 
 Current core interactions include:
 
 - inspect automatically measured spikelets and awns;
+- use **Review Suggested** to prioritize measurements that deserve attention;
 - compare image evidence, candidate paths, and the selected representative awn;
-- drag an existing awn path when it is misplaced;
-- add a missing awn;
-- delete an incorrect path;
-- rerun a measurement after changing the model or calibration;
-- export reviewed phenotype measurements.
+- drag or redraw an awn path, add a missing awn, or delete an incorrect path;
+- confirm reviewed measurements directly beside the selected awn;
+- rerun after changing the model or calibration;
+- save/reopen projects and export reviewed phenotype measurements.
+
+The canonical public model remains YOLO11N. In **Settings -> Measurement**, users can also register another compatible local Ultralytics YOLO segmentation checkpoint by path. Selecting a model starts loading it immediately, so a later Run/Rerun does not need to pay the full model-loading cost again. Awn Studio intentionally keeps only one active model loaded at a time to avoid unnecessary GPU-memory use.
 
 ---
 
