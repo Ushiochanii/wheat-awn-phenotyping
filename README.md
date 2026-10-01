@@ -12,7 +12,7 @@ Instead of treating model predictions as final answers, Awn Studio turns automat
 
 ---
 
-## From wheat spike to measurement
+## 🌾 From wheat spike to measurement
 
 Awn Studio measures the long, bristle-like **awns** that extend from wheat spikelets. Before analysis, the plant material is prepared as an organized digital image of detached spikelets.
 
@@ -24,7 +24,7 @@ The resulting digitized spikelet pages provide a consistent input for automated 
 
 ---
 
-## What can Awn Studio do?
+## ✨ What can Awn Studio do?
 
 A typical workflow starts with a digitized page of wheat spikelets and ends with reviewed, exportable awn-length measurements.
 
@@ -54,7 +54,7 @@ Once review is complete, Awn Studio can export the measurements for downstream a
 
 ---
 
-## Why Awn Studio?
+## 💡 Why Awn Studio?
 
 Conventional awn measurement is usually done either directly with a ruler or manually from digital images in tools such as ImageJ.
 
@@ -71,7 +71,7 @@ Awn Studio was built to reduce that manual workload while keeping the result ins
 
 ---
 
-## From a digitized image to awn length
+## 🧭 From a digitized image to awn length
 
 The public workflow is designed around a simple user-facing sequence:
 
@@ -99,7 +99,7 @@ Export
 
 ---
 
-## How does it work?
+## ⚙️ How does it work?
 
 This section gives a short technical view of the maintained pipeline. Detailed implementation notes belong in the documentation rather than in the first half of the README.
 
@@ -130,7 +130,7 @@ Awn Studio exposes the automatic result rather than hiding it behind a single nu
 
 ---
 
-## Awn Studio
+## 🧑‍🔬 Awn Studio
 
 The interactive workspace is designed for reviewing automatic measurements without returning to a separate annotation program.
 
@@ -148,7 +148,7 @@ The canonical public model remains YOLO11N. In **Settings -> Measurement**, user
 
 ---
 
-## Getting started
+## 🚀 Getting started
 
 Python 3.10+ is required.
 
@@ -192,7 +192,7 @@ awnphen studio
 
 ---
 
-## What does Awn Studio produce?
+## 📦 What does Awn Studio produce?
 
 Depending on the workflow, outputs can include:
 
@@ -206,7 +206,7 @@ Depending on the workflow, outputs can include:
 
 ---
 
-## Model and reproducibility
+## 🧪 Model and reproducibility
 
 The canonical public checkpoint is hosted on Hugging Face:
 
@@ -220,7 +220,7 @@ The public repository intentionally contains the maintained runtime rather than 
 
 ---
 
-## Current limitations
+## ⚠️ Current limitations
 
 Awn Studio is semi-automated rather than fully autonomous. Difficult images can still require human correction, particularly when awns are severely occluded, weakly visible, or confused with neighbouring structures.
 
@@ -230,7 +230,7 @@ The current maintained measurement contract uses one scalar millimetre-per-pixel
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 - [Architecture](docs/architecture.md)
 - [Release notes](RELEASE_NOTES.md)
