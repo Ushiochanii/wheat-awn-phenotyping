@@ -12,7 +12,7 @@ Instead of treating model predictions as final answers, Awn Studio turns automat
 
 ---
 
-## From wheat spike to digital sample
+## From wheat spike to measurement
 
 Awn Studio measures the long, bristle-like **awns** that extend from wheat spikelets. Before analysis, the plant material is prepared as an organized digital image of detached spikelets.
 
