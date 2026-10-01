@@ -20,17 +20,7 @@ Awn Studio measures the long, bristle-like **awns** that extend from wheat spike
   <img src="docs/assets/readme/sample-preparation.png" alt="From wheat spike to digital sample" width="920">
 </p>
 
-1. **Field material**  
-   Wheat spikes are collected from plants as the starting material.
-
-2. **Whole spike**  
-   Individual spikes are separated from the plant and prepared for spikelet-level observation.
-
-3. **Detached spikelets**  
-   Spikelets are removed from the spike, arranged on grid paper, fixed in place, and digitized into a consistent image for analysis.
-
-4. **Reference measurement**  
-   The same material can also be measured manually in ImageJ to create reference measurements for validation.
+The resulting digitized spikelet pages provide a consistent input for automated measurement, while manual measurements from the same material can be used as reference data for validation.
 
 ---
 
