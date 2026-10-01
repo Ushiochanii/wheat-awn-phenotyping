@@ -9,8 +9,9 @@ export function measurementResultModelId(page) {
     page?.inference?.model_id ??
     page?.inference?.run?.model?.id ??
     page?.inferenceMeta?.modelId ??
-    // Public releases use one canonical model identity.
-    'yolo11n-canonical'
+    // Legacy Awn Studio results predate model selection and were all produced
+    // by the frozen Controlled v2 Stage1 model.
+    'controlled-v2-stage1'
   );
 }
 

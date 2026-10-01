@@ -1,6 +1,6 @@
 // Keep the entry and all of its imports on the same release across browser caches.
 (async () => {
-  const release = '20261001-tour4';
+  const release = '20261001-model-manager1';
   const fail = error => {
     console.error('Workbench startup failed', error);
     const panel = document.createElement('div');
@@ -21,8 +21,6 @@
 
   try {
     await import('./app.mjs?v=' + release);
-    const {initOnboarding} = await import('./onboarding.mjs?v=' + release);
-    initOnboarding();
   } catch (error) {
     fail(error);
   }

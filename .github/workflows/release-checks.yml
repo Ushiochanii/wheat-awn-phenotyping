@@ -35,7 +35,7 @@ jobs:
         run: |
           node --check app/awn_studio/app.mjs
           node --check app/awn_studio/workflow.mjs
-          node --check app/awn_studio/onboarding.mjs
+          node --check app/awn_studio/inference_client.mjs
           node --check src/awnphen/_bundle/app/awn_studio/app.mjs
 
       - name: Build wheel

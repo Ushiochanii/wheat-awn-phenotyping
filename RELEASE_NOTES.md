@@ -1,25 +1,37 @@
-# v0.1.1 audit-hardening release
+# v0.2.0 Awn Studio workflow release
 
-AwnPhen 0.1.1 packages the maintained wheat awn phenotyping runtime, Awn Studio, the canonical YOLO11N model binding, one bundled demo image, and lightweight release tests.
+AwnPhen 0.2.0 updates the public Awn Studio workflow while preserving the canonical YOLO11N scientific runtime and Hugging Face model distribution established in v0.1.1.
 
-## Included
+## Highlights
 
-- canonical YOLO11N instance-segmentation inference
-- automatic scan-grid calibration
-- detection reconciliation and physical cleanup
-- Unified Growth reconstruction
-- representative-awn selection and root normalization
-- calibrated awn-length measurement
-- Awn Studio review, editing, and CSV export
-- automatic canonical model download from Hugging Face
-- bundled demo runnable with `awnphen demo`
+- refreshed Awn Studio review workflow with Review Suggested prioritization
+- floating Confirm / Reopen action beside the selected representative awn
+- simplified measurement sidebar and inline spikelet-ID editing
+- redraw mode hides the previous representative path while drawing and restores it on cancel
+- review seen/unseen state and improved latest-result navigation
+- calibration changes after inference now show a non-blocking rerun recommendation
+- browser-session restore and Open Project resume the latest measurement result
+- bundled sample reuse avoids duplicate sample cards
+- Settings can register compatible local Ultralytics YOLO segmentation checkpoints by path
+- selecting a model preloads it through the serialized inference worker, reducing the delay before the next Run/Rerun
+- forced onboarding has been removed; workflow guidance lives in the README instead
 
-## Distribution
+## Model policy
 
-Canonical model:
+The canonical public model remains YOLO11N from:
 
 - `anpanchanii/awnphen-yolo11n`
 - checkpoint SHA-256: `a7a5cf23bf5d35266e4fa6b1dc0244ee802026a381548bcd202f04b3ebf42097`
+
+Custom local model registration in the public package supports the same Ultralytics YOLO segmentation interface. Research comparison checkpoints such as RF-DETR, Mask2Former, Mask R-CNN, and YOLO11M benchmark weights are not distributed in the public runtime.
+
+## Reliability
+
+The release candidate was audited across project persistence, review/edit state, calibration changes, model-service failures, malformed project files, and 100+ real-page browser workloads. The maintained Workbench had no remaining P0/P1 release blockers at the end of the audit.
+
+Large projects may still show short UI hitches while full-resolution source images are decoded for sidebar thumbnails. This is a performance limitation rather than a measurement-correctness issue.
+
+## Distribution
 
 Repository:
 
@@ -28,25 +40,3 @@ Repository:
 License:
 
 - GNU AGPL-3.0
-
-## Audit hardening
-
-A post-publication code audit tightened the release without changing frozen scientific thresholds:
-
-- restored the frozen grid-calibration implementation after detecting release-only drift
-- made automatic calibration fail closed when calibration QC is inadequate
-- replaced the CLI demo with validation page `IMG_9710`, which passes frozen grid QC at 59 px per 5 mm on both axes
-- pinned the canonical Hugging Face model revision and SHA-256
-- pinned Ultralytics to the validated 8.4.140 runtime
-- hardened localhost origin validation
-- removed an obsolete internal launcher
-- corrected the Awn Studio integration-report URL
-- added release hygiene tests and GitHub Actions checks
-
-See `docs/code-audit-2026-10-01.md` for the audit record.
-
-## Validation
-
-The public runtime has been smoke-tested through the full canonical pipeline on CPU. A built wheel is also unpacked outside the source tree and exercised as part of release validation, verifying that Awn Studio and demo assets are included in the distributable package.
-
-Training pipelines, benchmark history, raw datasets, publication working files, archives, and comparison-model checkpoints are intentionally excluded from the public runtime.

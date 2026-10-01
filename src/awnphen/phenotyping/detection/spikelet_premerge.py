@@ -22,7 +22,8 @@ SPIKELET_PREMERGE_IMPLEMENTATION = "awnphen_next.spikelet_premerge_v1"
 
 @dataclass(frozen=True, slots=True)
 class SpikeletPremergeConfig:
-    tiny_area_mm2: float = 0.25
+    # User-selected physical cleanup minimum; areas below 10 mm² are rejected.
+    tiny_area_mm2: float = 10.0
     max_awn_overlap_fraction: float = 0.50
     max_fragment_gap_mm: float = 2.0
     max_fragment_area_ratio: float = 0.25

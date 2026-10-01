@@ -43,6 +43,15 @@ export function createInferenceClient({
 
   const modelInfo = options => request('/api/model', options);
   const models = options => request('/api/models', options);
+  const registerModel = payload => request('/api/models/register', {
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+  });
+  const removeModel = modelId => request('/api/models/remove', {
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId})
+  });
+  const preloadModel = modelId => request('/api/models/preload', {
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId})
+  });
   const submit = payload => request('/api/jobs', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -92,5 +101,5 @@ export function createInferenceClient({
     return state;
   }
 
-  return Object.freeze({request, modelInfo, models, submit, job, preview, wait});
+  return Object.freeze({request, modelInfo, models, registerModel, removeModel, preloadModel, submit, job, preview, wait});
 }

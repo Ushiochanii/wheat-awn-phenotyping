@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Awn Studio · Wheat Awn Phenotyping</title>
   <link rel="icon" type="image/svg+xml" href="assets/brand/app-icon.svg">
-  <link rel="stylesheet" href="style.css?v=20260930-brand1">
+  <link rel="stylesheet" href="style.css?v=20261001-model-manager1">
   <link rel="stylesheet" href="brand-assets.css?v=20260930-brand1">
-  <link rel="stylesheet" href="onboarding.css?v=20261001-tour4">
 </head>
 <body>
 <header>
@@ -18,7 +17,6 @@
   <span class="pill" data-i18n="brand.mode">Local · interactive prototype</span>
   <div class="header-actions">
     <span id="save-status" role="status" data-i18n="status.noProject">No project yet</span>
-    <button id="how-to-start" class="icon-button help-button" type="button" aria-label="How to start" title="How to start">?</button>
     <button id="settings-open" class="icon-button" type="button" aria-label="Settings" title="Settings">⚙</button>
     <button id="open-project" data-i18n="action.openProject">Open project</button>
     <button id="save-project" data-i18n="action.saveProject">Save project</button>
@@ -49,6 +47,7 @@
         <button id="calibration-open" class="scale-button" title="Edit current image scale" disabled>⌁ Not calibrated</button>
       </div>
     </div>
+    <div id="calibration-rerun-warning" class="calibration-rerun-warning" hidden>Calibration changed · rerun recommended</div>
 
     <div class="model-bar">
       <label class="model-picker"><span data-i18n="model.selectorLabel">Model</span><select id="model-select" aria-label="Inference model" disabled><option>Connecting…</option></select></label>
@@ -99,6 +98,7 @@
         <g id="annotations"></g>
         <g id="draft"></g>
       </svg>
+      <button id="floating-confirm" class="floating-confirm" type="button" hidden>✓ Confirm</button>
       <nav id="canvas-tools" aria-label="Canvas tools">
         <div class="canvas-tool-section">
           <button data-tool="select" title="Select objects; drag empty canvas to pan (V)" aria-label="Select and pan" aria-pressed="true"><span aria-hidden="true">✋</span><kbd>V</kbd></button>
@@ -150,20 +150,7 @@
       </div>
       <div id="review-actions" class="review-actions" hidden>
         <div><span id="review-selected-label">Selected spikelet</span><strong id="review-selected-status">—</strong><small id="review-selected-reasons" class="review-reasons" hidden></small></div>
-        <button id="confirm-selected" class="primary" data-i18n="review.confirm">Confirm</button>
       </div>
-      <section id="measure-editor" class="measure-editor">
-        <div class="manual-tools"><strong data-i18n="results.manualCorrection">Manual correction</strong><button data-tool="polygon" title="Add a missed spikelet (P)">＋ Add spikelet <kbd>P</kbd></button></div>
-        <div id="edit-empty" class="inspect-empty" data-i18n="edit.empty">Select a spikelet to edit its geometry or awn path.</div>
-        <section id="editor" hidden>
-          <div class="section-title"><h2 data-i18n="editor.title">Edit selected spikelet</h2><button id="focus" data-i18n="action.focus">Focus</button></div>
-          <label><span data-i18n="editor.spikeletId">Spikelet ID</span><input id="group-name" autocomplete="off" maxlength="80"></label>
-          <p id="name-error" role="alert"></p>
-          <div class="length-card"><span data-i18n="editor.awnLength">Representative awn length</span><strong id="selected-length">—</strong></div>
-          <div class="edit-actions"><button id="redraw" class="primary">Redraw representative awn <kbd>L</kbd></button></div>
-          <p class="muted" data-i18n="editor.help">Drag vertices to refine geometry. Click the awn path to add a vertex; Delete removes the current selection. Edits are undoable.</p>
-        </section>
-      </section>
       <details id="timing-panel"><summary data-i18n="results.processingTime">Processing time</summary><div id="timing-details"></div></details>
     </section>
 
@@ -238,6 +225,17 @@
           <span class="settings-copy"><strong>Default model</strong><small>Choose the model selected when the local inference service connects.</small></span>
           <select id="setting-default-model" class="settings-select"><option value="">Service default</option></select>
         </label>
+        <div class="settings-model-manager">
+          <div class="settings-copy"><strong>Local models</strong><small>Add a compatible checkpoint by path. Windows drive paths and WSL paths are accepted by the local service.</small></div>
+          <div class="model-add-grid">
+            <input id="setting-model-name" class="settings-text" type="text" placeholder="Display name" autocomplete="off">
+            <select id="setting-model-adapter" class="settings-select settings-select-wide"></select>
+            <input id="setting-model-path" class="settings-text model-path-input" type="text" placeholder="E:\\models\\best.pt or /mnt/e/models/best.pt" autocomplete="off">
+            <button id="setting-model-add" class="settings-small-button" type="button">Add model</button>
+          </div>
+          <div id="setting-custom-models" class="custom-model-list" aria-live="polite"></div>
+          <p id="setting-model-message" class="settings-inline-message" hidden></p>
+        </div>
         <label class="settings-row" for="setting-run-after-calibration">
           <span class="settings-copy"><strong>Run after calibration</strong><small>Start automatic measurement immediately after a source image is calibrated.</small></span>
           <span class="switch"><input id="setting-run-after-calibration" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
@@ -408,6 +406,6 @@
 <input id="image-input" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
 <input id="project-input" type="file" accept=".json" hidden>
 <input id="folder-input" type="file" accept="image/png,image/jpeg,image/webp" webkitdirectory multiple hidden>
-<script src="boot.js?v=20261001-tour3"></script>
+<script src="boot.js?v=20261001-model-manager1"></script>
 </body>
 </html>

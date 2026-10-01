@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "awnphen"
-version = "0.1.1"
+version = "0.2.0"
 description = "Automated wheat awn phenotyping with segmentation, physical reconstruction, and human review."
 readme = "README.md"
 license = "AGPL-3.0"

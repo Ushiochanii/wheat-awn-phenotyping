@@ -124,6 +124,7 @@ export function renderEditableAnnotations({
   objectSelected,
   nodeSelected,
   selectedNode,
+  hiddenLineGroupId,
   scaleDraft,
   draft,
   marquee
@@ -154,7 +155,7 @@ export function renderEditableAnnotations({
       'data-kind': 'polygon'
     }, root);
 
-    if (group.line.length > 1) {
+    if (group.line.length > 1 && group.uid !== hiddenLineGroupId) {
       const attrs = {
         points: group.line.map(point => point.join(',')).join(' '),
         fill: 'none',
@@ -261,7 +262,7 @@ export function renderEditableAnnotations({
       svgElement('circle', {
         cx: point[0],
         cy: point[1],
-        r: radius,
+        r: tool === 'scale' ? 5 / screenScale : radius,
         fill: '#245c48'
       }, draftRoot);
     }

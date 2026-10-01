@@ -27,8 +27,11 @@ from inference_backend import (
     MODEL_NAME,
     WEIGHTS,
     ROOT,
+    SUPPORTED_ADAPTERS,
     model_catalog,
     model_spec,
+    register_custom_model,
+    remove_custom_model,
 )
 from job_payload import persistent_job_payload, public_job_payload
 from calibration_plausibility import assess_calibration_plausibility
@@ -107,6 +110,8 @@ class Handler(WorkbenchHandler):
                 default=DEFAULT_MODEL_ID,
                 device=self.server.engine.device,
                 models=model_catalog(),
+                adapters=[{'id': key, 'name': value} for key, value in SUPPORTED_ADAPTERS.items()],
+                loaded_model_id=self.server.engine.model_id,
             ))
         if path.startswith('/api/jobs/') and path.endswith('/preview'):
             jid = path.split('/')[-2]
@@ -134,12 +139,41 @@ class Handler(WorkbenchHandler):
             '/api/grid-calibration',
             '/api/calibration-plausibility',
         }
-        if path not in preflight_paths and path != '/api/jobs':
+        model_paths = {
+            '/api/models/register',
+            '/api/models/remove',
+            '/api/models/preload',
+        }
+        if path not in preflight_paths and path not in model_paths and path != '/api/jobs':
             return self.reply({'error':'Unknown endpoint.'},404)
         if not self.allowed_origin(self.headers.get('Origin','')):
             return self.reply({'error':'Request origin is not allowed.'},403)
         try:
             length = int(self.headers.get('Content-Length', '0'))
+            if path in model_paths:
+                if not 0 < length <= 64*1024:
+                    raise ValueError('Model settings request is too large.')
+                payload = json.loads(self.rfile.read(length))
+                if path == '/api/models/register':
+                    spec = register_custom_model(
+                        name=payload.get('name',''),
+                        weights=payload.get('weights',''),
+                        adapter=payload.get('adapter','ultralytics_yolo_seg'),
+                        description=payload.get('description',''),
+                    )
+                    return self.reply({'model': spec.public(default=False), 'models': model_catalog()})
+                if path == '/api/models/remove':
+                    model_id = str(payload.get('model_id') or '')
+                    if not model_id.startswith('custom-'):
+                        raise ValueError('Only user-added models can be removed.')
+                    if not remove_custom_model(model_id):
+                        return self.reply({'error':'Custom model not found.'},404)
+                    return self.reply({'removed':model_id, 'models':model_catalog()})
+                model_id = str(payload.get('model_id') or '')
+                spec = model_spec(model_id)
+                future = POOL.submit(self.server.engine.preload, spec.id)
+                loaded = future.result()
+                return self.reply({'model_id':loaded.id, 'name':loaded.name, 'ready':True})
             if not 0 < length <= 40*1024*1024:
                 raise ValueError('Image request limit is 40 MB.')
             payload = json.loads(self.rfile.read(length))
