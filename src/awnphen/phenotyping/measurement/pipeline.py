@@ -136,7 +136,7 @@ def run_root_normalization(
             "outside_hold_mm": 0.75,
             "sample_step_mm": 0.10,
             "tolerance_px": 1.0,
-            "min_path_mm": 10.0,
+            "min_path_mm": 5.0,
         },
         "selected_representatives": selected_total,
         "normalized_representatives": len(removed),

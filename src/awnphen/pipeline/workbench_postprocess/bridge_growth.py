@@ -180,6 +180,7 @@ def rank_next_support(
     spikelet_id,
     reserved_owner,
     branch_prediction_keys=(),
+    crossing_guard=None,
 ):
     """Return the best production-ranked support that also passes bridge geometry."""
     excluded = set(used_ids)
@@ -200,6 +201,8 @@ def rank_next_support(
         }
         if branch_prediction_keys:
             production_kwargs["branch_prediction_keys"] = branch_prediction_keys
+        if crossing_guard is not None:
+            production_kwargs["crossing_guard"] = crossing_guard
         candidate = _production_rank_next_support(
             current_can,
             pool,

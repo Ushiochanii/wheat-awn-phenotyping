@@ -6,6 +6,7 @@ from awnphen.phenotyping.physical.trajectory import path_length
 
 from .config import DEFAULT_UNIFIED_GROWTH_CONFIG
 from .growth import _wide_rank_next_support
+from .junctions import claim_groups
 
 _CONFIG = DEFAULT_UNIFIED_GROWTH_CONFIG
 GROWTH_MAX_HOPS = _CONFIG.growth_max_hops
@@ -38,6 +39,7 @@ def _init_competing_branch(seed, globally_claimed):
         "prediction_keys": set(seed.get("prediction_keys") or ()),
         "steps": [],
         "ownership_events": [],
+        "stopped": False,
     }
 
 
@@ -54,6 +56,7 @@ def _append_competing_support(state, support, *, ownership_mode, competitor_coun
     state["prediction_keys"].update(support.get("prediction_keys") or ())
     state["current_raw"] = next_raw
     state["current_can"] = next_can
+    state["stopped"] = bool(support.get("growth_stop_reason"))
     state["steps"].append(
         {
             "hop": len(state["steps"]) + 1,
@@ -74,9 +77,18 @@ def _append_competing_support(state, support, *, ownership_mode, competitor_coun
             "bridge_gate_max_deg": support.get("bridge_gate_max_deg"),
             "entry_index": int(entry_index),
             "max_join_turn_deg": float(max_turn),
+            "resolved_raw_path": list(support["raw_path"]),
             "ownership_mode": ownership_mode,
             "ownership_competitor_count": int(competitor_count),
             "ownership_gap_rel": None if gap_rel is None else float(gap_rel),
+            "consumed_claim": support.get("consumed_claim", {}),
+            **({"resolved_raw_path": list(support["raw_path"]),
+                "junction_clip": support["junction_clip"],
+                "growth_stop_reason": support["growth_stop_reason"]}
+               if support.get("junction_clip") else {}),
+            **{key: support[key] for key in (
+                "crossing_splice", "foreign_body_clip", "growth_stop_reason"
+            ) if key in support},
         }
     )
     return True
@@ -128,7 +140,7 @@ def grow_competing_branches(
     for _round in range(max_rounds):
         proposals = {}
         for idx, state in enumerate(states):
-            if len(state["steps"]) >= GROWTH_MAX_HOPS:
+            if state["stopped"] or len(state["steps"]) >= GROWTH_MAX_HOPS:
                 continue
             support = ranker(
                 state["current_can"],
@@ -154,110 +166,113 @@ def grow_competing_branches(
                     "branch_index": idx,
                     "score": float(support["growth_score"]),
                     "support": support,
+                    **support.get("consumed_claim", {}),
                 }
                 for idx, support in challengers
             ]
 
-            if prior:
-                best_prior = min(prior, key=lambda row: row["score"])
-                for row in current:
-                    gap = _ownership_gap_rel(row["score"], best_prior["score"])
-                    state = states[row["branch_index"]]
-                    if _ownership_allows_share(row["score"], best_prior["score"]):
-                        if _append_competing_support(
-                            state,
-                            row["support"],
-                            ownership_mode="shared_with_prior_owner",
-                            competitor_count=len(prior) + len(current),
-                            gap_rel=gap,
-                        ):
-                            ownership[support_id].append(
-                                {
-                                    "branch_index": row["branch_index"],
-                                    "score": row["score"],
-                                    "hop": len(state["steps"]),
-                                }
-                            )
+            for current, prior in claim_groups(current, prior):
+                if prior:
+                    best_prior = min(prior, key=lambda row: row["score"])
+                    for row in current:
+                        gap = _ownership_gap_rel(row["score"], best_prior["score"])
+                        state = states[row["branch_index"]]
+                        if _ownership_allows_share(row["score"], best_prior["score"]):
+                            if _append_competing_support(
+                                state,
+                                row["support"],
+                                ownership_mode="shared_with_prior_owner",
+                                competitor_count=len(prior) + len(current),
+                                gap_rel=gap,
+                            ):
+                                ownership[support_id].append(
+                                    {
+                                        "branch_index": row["branch_index"],
+                                        "score": row["score"],
+                                        "hop": len(state["steps"]),
+                                        **row["support"].get("consumed_claim", {}),
+                                    }
+                                )
+                                state["ownership_events"].append(
+                                    {
+                                        "support_hypothesis_id": support_id,
+                                        "result": "shared",
+                                        "score": row["score"],
+                                        "best_competing_score": best_prior["score"],
+                                        "gap_rel": gap,
+                                    }
+                                )
+                                progressed = True
+                        else:
+                            state["denied"].add(support_id)
                             state["ownership_events"].append(
                                 {
                                     "support_hypothesis_id": support_id,
-                                    "result": "shared",
+                                    "result": "denied_existing_owner",
                                     "score": row["score"],
                                     "best_competing_score": best_prior["score"],
                                     "gap_rel": gap,
                                 }
                             )
-                            progressed = True
+                    continue
+
+                current.sort(key=lambda row: (row["score"], row["branch_index"]))
+                best_score = current[0]["score"]
+                accepted = []
+                for row in current:
+                    gap = _ownership_gap_rel(row["score"], best_score)
+                    if _ownership_allows_share(row["score"], best_score):
+                        accepted.append((row, gap))
                     else:
+                        state = states[row["branch_index"]]
                         state["denied"].add(support_id)
                         state["ownership_events"].append(
                             {
                                 "support_hypothesis_id": support_id,
-                                "result": "denied_existing_owner",
+                                "result": "denied_better_sibling",
                                 "score": row["score"],
-                                "best_competing_score": best_prior["score"],
+                                "best_competing_score": best_score,
                                 "gap_rel": gap,
                             }
                         )
-                continue
 
-            current.sort(key=lambda row: (row["score"], row["branch_index"]))
-            best_score = current[0]["score"]
-            accepted = []
-            for row in current:
-                gap = _ownership_gap_rel(row["score"], best_score)
-                if _ownership_allows_share(row["score"], best_score):
-                    accepted.append((row, gap))
-                else:
+                mode = "shared" if len(accepted) > 1 else "exclusive"
+                for row, gap in accepted:
                     state = states[row["branch_index"]]
-                    state["denied"].add(support_id)
-                    state["ownership_events"].append(
-                        {
-                            "support_hypothesis_id": support_id,
-                            "result": "denied_better_sibling",
-                            "score": row["score"],
-                            "best_competing_score": best_score,
-                            "gap_rel": gap,
-                        }
-                    )
-
-            mode = "shared" if len(accepted) > 1 else "exclusive"
-            for row, gap in accepted:
-                state = states[row["branch_index"]]
-                if _append_competing_support(
-                    state,
-                    row["support"],
-                    ownership_mode=mode,
-                    competitor_count=len(current),
-                    gap_rel=gap,
-                ):
-                    ownership.setdefault(support_id, []).append(
-                        {
-                            "branch_index": row["branch_index"],
-                            "score": row["score"],
-                            "hop": len(state["steps"]),
-                        }
-                    )
-                    state["ownership_events"].append(
-                        {
-                            "support_hypothesis_id": support_id,
-                            "result": mode,
-                            "score": row["score"],
-                            "best_competing_score": best_score,
-                            "gap_rel": gap,
-                        }
-                    )
-                    progressed = True
+                    if _append_competing_support(
+                        state,
+                        row["support"],
+                        ownership_mode=mode,
+                        competitor_count=len(current),
+                        gap_rel=gap,
+                    ):
+                        ownership.setdefault(support_id, []).append(
+                            {
+                                "branch_index": row["branch_index"],
+                                "score": row["score"],
+                                "hop": len(state["steps"]),
+                            }
+                        )
+                        state["ownership_events"].append(
+                            {
+                                "support_hypothesis_id": support_id,
+                                "result": mode,
+                                "score": row["score"],
+                                "best_competing_score": best_score,
+                                "gap_rel": gap,
+                            }
+                        )
+                        progressed = True
 
         if not progressed:
             if all(
-                ranker(
+                (None if state["stopped"] else ranker(
                     state["current_can"],
                     pool,
                     state["used"] | state["denied"],
                     spikelet_id=state["spikelet_id"],
                     reserved_owner=reserved_owner,
-                )
+                ))
                 is None
                 for state in states
             ):
@@ -275,6 +290,9 @@ def grow_representatives(
 ):
     """Grow sibling seeds competitively, then commit only the winning branch."""
     globally_claimed = set()
+    # Partial claims live on a private pool copy, never on immutable evidence.
+    active_pool = [dict(support) for support in pool]
+    partial_claims = {}
     representatives = []
     diagnostics = []
 
@@ -295,7 +313,7 @@ def grow_representatives(
         ]
         branches = grow_competing_branches(
             eligible_seeds,
-            pool,
+            active_pool,
             globally_claimed,
             reserved_owner,
             rank_next_support=rank_next_support,
@@ -312,7 +330,16 @@ def grow_representatives(
             )
         )
         winner = branches[0]
-        globally_claimed.update(winner["support_hypothesis_ids"])
+        clipped = {step["support_hypothesis_id"]: step["consumed_claim"]
+                   for step in winner.get("steps", ()) if step.get("junction_clip")}
+        globally_claimed.update(sid for sid in winner["support_hypothesis_ids"]
+                                if sid not in clipped)
+        for support_id, claim in clipped.items():
+            partial_claims.setdefault(support_id, []).append(claim)
+        for support in active_pool:
+            claims = partial_claims.get(support["support_hypothesis_id"])
+            if claims:
+                support["claimed_path_intervals"] = tuple(claims)
 
         candidate_id = (
             f"unified_growth_v1_competitive:{spikelet_id}:{winner['seed_hypothesis_id']}"

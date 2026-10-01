@@ -7,6 +7,8 @@ from awnphen.phenotyping.physical.trajectory import (
 )
 from shapely.geometry import LineString
 
+from .junctions import support_junctions
+
 
 def _orient_root_to_tip(raw_path, canonical_path):
     """Orient one support from the spikelet/root side toward the distal tip.
@@ -68,6 +70,8 @@ def build_support_pool(awn_hypotheses, transform, evidence_by_id, *, skeleton_ca
                 "prediction_keys": _hypothesis_prediction_keys(hypothesis, evidence_by_id),
                 "geometry": hypothesis.geometry,
                 "length_mm": float(path_length(can)),
+                "path_junctions": support_junctions(skel, transform),
+                "_path_indices": {tuple(p): i for i, p in enumerate(raw)},
             }
         )
     return pool

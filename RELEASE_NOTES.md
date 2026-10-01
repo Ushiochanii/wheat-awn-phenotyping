@@ -1,3 +1,17 @@
+# Current main: crossing-aware reconstruction (2026-10-02)
+
+- Promote the validated crossing guard into the maintained runtime; each page has independent state.
+- Preserve awn identity across resolvable crossings using consistent multiscale arm pairing and observed mask skeleton nodes.
+- Clip sharp ambiguous mask junctions and growth entering another spikelet; keep partial ownership and actual Hop replay.
+- Mark unresolved crossing endpoints and truncated junctions for review in Awn Studio.
+- Expose the loaded pipeline version and crossing-guard state through the model API.
+- Align root normalization with the maintained 5 mm minimum-path default; the existing 10 mm² minimum spikelet-area rule is unchanged.
+- Synchronize readable Studio source and the installed bundle. Existing projects remain readable; rerun images to use the new algorithm.
+
+The canonical model and public Hugging Face resolver are unchanged. Historical benchmark numbers were produced by earlier versions; this update does not re-evaluate them. This source update does not create a new release tag or replace previously published distribution files.
+
+---
+
 # v0.2.0 Awn Studio workflow release
 
 AwnPhen 0.2.0 updates the public Awn Studio workflow while preserving the canonical YOLO11N scientific runtime and Hugging Face model distribution established in v0.1.1.

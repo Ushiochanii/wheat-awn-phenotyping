@@ -238,7 +238,7 @@ def normalize_root_to_spikelet_exit(
     outside_hold_mm: float=0.75,
     sample_step_mm: float=0.10,
     tolerance_px: float=1.0,
-    min_path_mm: float=10.0,
+    min_path_mm: float=5.0,
 ) -> tuple[tuple[tuple[float,float],...], Mapping[str,Any]]:
     """Trim a representative path to its first stable exit from the spikelet.
 

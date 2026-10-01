@@ -17,7 +17,10 @@ export const REVIEW_REASON_LABELS = Object.freeze({
   large_fragment_gap: 'The final awn crosses an unusually large reconstructed gap',
   sharp_join: 'A reconstructed join is close to the geometric acceptance limit',
   long_reconstruction_chain: 'The final awn required several fragment-growth hops',
-  branch_disagreement: 'Competing branches have similar scores but materially different lengths'
+  branch_disagreement: 'Competing branches have similar scores but materially different lengths',
+  crossing_continuation_unresolved: 'The awn continuation at a crossing requires review',
+  foreign_spikelet_body: 'Growth stopped before entering another spikelet',
+  ambiguous_junction: 'Growth stopped at an ambiguous branch'
 });
 
 const finite = value => Number.isFinite(Number(value)) ? Number(value) : null;
@@ -42,6 +45,11 @@ export function assessAutomaticReview(record, orientation = {}) {
     orientation?.policy === 'single_spikelet_default_polarity' ||
     orientation?.orientation_degraded === true;
   if (degradedOrientation) reasons.push('degraded_orientation');
+  const stopReason = record?.representative?.review_reason;
+  if (stopReason && Object.hasOwn(REVIEW_REASON_LABELS, stopReason)) {
+    reasons.push(stopReason);
+    signals.endpoint_status = record.representative.endpoint_status ?? 'unresolved';
+  }
 
   if (winner) {
     const confidences = [];

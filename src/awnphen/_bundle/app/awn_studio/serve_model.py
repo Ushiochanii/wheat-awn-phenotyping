@@ -39,6 +39,7 @@ from resolution_gate import ResolutionGate
 from spikelet_scale_probe import SpikeletScaleProbe
 from awnphen.phenotyping.measurement.calibration import GRID_MM, calibrate_grid_v2
 from awnphen.pipeline.workbench_postprocess import (
+    WORKBENCH_POSTPROCESS_VERSION,
     reconcile_detection_evidence as reconcile_workbench_detection_evidence,
     run_physical_closeout as run_workbench_physical_closeout,
 )
@@ -104,6 +105,8 @@ class Handler(WorkbenchHandler):
                 model_id=DEFAULT_MODEL_ID,
                 available=WEIGHTS.is_file(),
                 device=self.server.engine.device,
+                pipeline_version=WORKBENCH_POSTPROCESS_VERSION,
+                crossing_guard_enabled=True,
             ))
         if path == '/api/models':
             return self.reply(dict(

@@ -53,7 +53,8 @@ def _step_view(
     return {
         "hop": int(step["hop"]),
         "support_hypothesis_id": support_id,
-        "raw_path": [] if support is None else _points(support.get("raw_path")),
+        "raw_path": (_points(step["resolved_raw_path"]) if step.get("resolved_raw_path") is not None
+                     else [] if support is None else _points(support.get("raw_path"))),
         "support_confidence": None if support is None else float(support.get("confidence", 0.0)),
         "support_length_mm": None if support is None else float(support.get("length_mm", 0.0)),
         "distance_mm": float(step["distance_mm"]),
@@ -76,6 +77,12 @@ def _step_view(
             else int(step["ownership_competitor_count"])
         ),
         "ownership_gap_rel": _optional_float(step.get("ownership_gap_rel")),
+        **({"junction_clip": dict(step["junction_clip"]),
+            "growth_stop_reason": str(step["growth_stop_reason"])}
+           if step.get("junction_clip") else {}),
+        **{key: step[key] for key in (
+            "crossing_splice", "foreign_body_clip", "growth_stop_reason"
+        ) if key in step},
     }
 
 
@@ -266,6 +273,9 @@ def build_unified_growth_inspection(
                     "raw_path": _points(representative.get("raw_path")),
                     "length_mm_internal": float(representative["length_mm_internal"]),
                     "growth_hops": int(representative["growth_hops"]),
+                    **{key: representative[key] for key in (
+                        "review_reason", "endpoint_status"
+                    ) if key in representative},
                     "canonical_source_spikelet_id": (
                         None
                         if representative.get("canonical_source_spikelet_id") is None

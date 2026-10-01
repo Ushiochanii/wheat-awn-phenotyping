@@ -9,6 +9,7 @@ from pathlib import Path
 from shapely.geometry import LineString, mapping
 
 from awnphen.pipeline import WORKBENCH_PAGE_ID, run_workbench_pipeline
+from awnphen.pipeline.workbench_postprocess import WORKBENCH_POSTPROCESS_VERSION
 
 PAGE_ID = WORKBENCH_PAGE_ID
 
@@ -57,6 +58,7 @@ def _adapt_unified_growth_inspection(payload, *, seeds, active_ids):
         "support_pool": list((payload or {}).get("support_pool", ())),
         "records": records,
         "source_to_product_spikelet": source_to_product,
+        "crossing_guard": (payload or {}).get("crossing_guard", {"enabled": False}),
     }
 
 
@@ -293,6 +295,8 @@ def run_canonical(
         ),
         source_sha256=prepared.source_sha256,
         pipeline="awnphen unified_growth_v1 physical closeout",
+        pipeline_version=WORKBENCH_POSTPROCESS_VERSION,
+        crossing_guard=diagnostics.get("crossing_guard", {"enabled": False}),
         orientation=orientation,
         path_simplification="DP1 measurement path; tolerance 1 px",
         pipeline_stages=[

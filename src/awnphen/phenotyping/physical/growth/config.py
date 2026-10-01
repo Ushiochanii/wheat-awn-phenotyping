@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
+from .crossing import CrossingPolicy
+
 from awnphen.phenotyping.physical.trajectory import (
     CONTINUATION_MAX_ANGLE_DEG,
     CONTINUATION_PCA_SPANS_MM,
@@ -14,6 +16,9 @@ from awnphen.phenotyping.physical.trajectory import (
 @dataclass(frozen=True, slots=True)
 class UnifiedGrowthConfig:
     """Scientific policy for Unified Growth v1."""
+
+    crossing_guard_enabled: bool = True
+    crossing_policy: CrossingPolicy = CrossingPolicy()
 
     primary_confidence: float = 0.50
     compaction_overlap: float = 0.92

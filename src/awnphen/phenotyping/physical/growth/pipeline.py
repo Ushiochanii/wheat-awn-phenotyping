@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import math
 import time
+from functools import partial
 
 from awnphen.phenotyping.detection.spikelet_premerge import preprocess_spikelet_hypotheses
 from awnphen.phenotyping.physical.orientation import (
@@ -13,6 +14,8 @@ from awnphen.phenotyping.physical.orientation import (
 from awnphen.phenotyping.detection.reconciliation import reconcile_detection_evidence
 
 from .config import DEFAULT_UNIFIED_GROWTH_CONFIG
+from .crossing import CrossingGuard
+from .growth import _wide_rank_next_support
 from .evidence import _build_compacted_awn_hypotheses
 from .ownership import grow_representatives
 from .seeds import discover_provisional_seeds
@@ -30,8 +33,17 @@ def run_unified_growth_page(
     inspection_sink=None,
     rank_next_support=None,
     seed_discovery_runner=None,
+    crossing_policy=None,
+    crossing_guard=None,
 ):
-    """Reconstruct one page with Unified Growth v1."""
+    """Reconstruct one page; crossing routing is enabled by default.
+
+    crossing_policy=False explicitly reproduces the previous production route.
+    All guard state belongs to this call; no module functions are patched.
+    """
+    guard = crossing_guard
+    if guard is None and crossing_policy is not False and _CONFIG.crossing_guard_enabled:
+        guard = CrossingGuard(crossing_policy or _CONFIG.crossing_policy)
 
     timing = {}
     evidence_by_id = {
@@ -116,17 +128,36 @@ def run_unified_growth_page(
         evidence_by_id,
         skeleton_cache=skeleton_cache,
     )
+    if guard is not None:
+        guard.spikelets = spikelets
+        pool = guard.prepare(pool, transform)
     seed_discovery = seed_discovery_runner or discover_provisional_seeds
     seed_groups, reserved_owner = seed_discovery(pool, spikelets)
+    if guard is not None:
+        guard.register_seeds(seed_groups)
     timing["seed_discovery_seconds"] = time.perf_counter() - started
 
     started = time.perf_counter()
+    ranker = rank_next_support
+    if guard is not None:
+        ranker = partial(ranker or _wide_rank_next_support, crossing_guard=guard)
     representatives, growth = grow_representatives(
         seed_groups,
         pool,
         reserved_owner,
-        rank_next_support=rank_next_support,
+        rank_next_support=ranker,
     )
+    if guard is not None:
+        guard.record_growth(growth)
+        winners = {row["spikelet_id"]: row["winner"] for row in growth}
+        for row in representatives:
+            steps = winners[row["spikelet_id"]].get("steps", ())
+            reason = (steps[-1].get("growth_stop_reason") if steps else None) or guard.endpoint_review_reason(row)
+            if reason:
+                row["review_reason"] = reason
+                row["endpoint_status"] = "unresolved"
+    guard_manifest = ({"enabled": True, **guard.manifest()} if guard is not None
+                      else {"enabled": False})
     spikelet_geometry_by_id = {
         str(item["id"]): item["geometry"].wkt
         for item in spikelets
@@ -151,15 +182,15 @@ def run_unified_growth_page(
             build_unified_growth_inspection,
         )
 
-        inspection_sink(
-            build_unified_growth_inspection(
+        payload = build_unified_growth_inspection(
                 spikelets=spikelets,
                 support_pool=pool,
                 seed_groups=seed_groups,
                 growth=growth,
                 representatives=representatives,
             )
-        )
+        payload["crossing_guard"] = guard_manifest
+        inspection_sink(payload)
 
     seed_count = sum(len(rows) for rows in seed_groups.values())
     projected_seeds = sum(
@@ -171,6 +202,7 @@ def run_unified_growth_page(
 
     return {
         "representatives": representatives,
+        "crossing_guard": guard_manifest,
         "growth": growth,
         "timing": timing,
         "raw_awn_count": sum(

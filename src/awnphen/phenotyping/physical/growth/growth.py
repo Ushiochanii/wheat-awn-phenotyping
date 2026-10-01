@@ -6,6 +6,7 @@ from awnphen.phenotyping.physical.support_integration import (
     resolve_support_path,
 )
 from awnphen.phenotyping.physical.trajectory import (
+    CONTINUATION_PCA_SPANS_MM,
     angle_deg,
     continuation_tangent,
     multiscale_continuation_angle,
@@ -15,6 +16,7 @@ from shapely.geometry import Point
 
 from .config import DEFAULT_UNIFIED_GROWTH_CONFIG
 from .geometry import _join_turn_metrics, _recent_trajectory
+from .junctions import clip_at_junction, consumed_claim, claims_overlap
 
 _CONFIG = DEFAULT_UNIFIED_GROWTH_CONFIG
 GROWTH_MAX_HOPS = _CONFIG.growth_max_hops
@@ -63,6 +65,7 @@ def _wide_rank_next_support(
     spikelet_id,
     reserved_owner,
     branch_prediction_keys=(),
+    crossing_guard=None,
 ):
     tip = current_can[-1]
     recent = _recent_trajectory(current_can)
@@ -86,7 +89,22 @@ def _wide_rank_next_support(
             source_aware=False,
             coverage_aware=True,
         )
+        if crossing_guard is not None:
+            resolved = crossing_guard.gate(current_can, support, resolved)
+            resolved = crossing_guard.foreign_body_clip(current_can, support, resolved)
         if resolved is None:
+            continue
+
+        resolved = clip_at_junction(
+            current_can, support, resolved,
+            spans_mm=CONTINUATION_PCA_SPANS_MM,
+            max_turn_deg=GROWTH_MAX_LOCAL_ANGLE_DEG,
+        )
+        if resolved is None:
+            continue
+        claim = consumed_claim(support, resolved)
+        if any(claims_overlap(claim, prior)
+               for prior in support.get("claimed_path_intervals", ())):
             continue
 
         extension = float(resolved["resolved_extension_mm"])
@@ -179,6 +197,7 @@ def _wide_rank_next_support(
             "multiscale_diagnostics": multiscale_diagnostics,
             **join_turn,
             "growth_score": float(score),
+            "consumed_claim": claim,
         }
         key = (
             score,
@@ -245,8 +264,17 @@ def grow_branch(seed, pool, globally_claimed, reserved_owner):
                 "bridge_gate_max_deg": support.get("bridge_gate_max_deg"),
                 "entry_index": int(entry_index),
                 "max_join_turn_deg": float(max_turn),
+                "resolved_raw_path": list(support["raw_path"]),
+                **({"resolved_raw_path": list(support["raw_path"]),
+                    "junction_clip": support["junction_clip"],
+                    "consumed_claim": support["consumed_claim"],
+                    "growth_stop_reason": support["growth_stop_reason"]}
+                   if support.get("junction_clip") else {}),
             }
         )
+
+        if support.get("growth_stop_reason"):
+            break
 
     final_length = float(path_length(current_can))
     angle_cost = sum(float(row["join_angle_deg"]) for row in steps)
