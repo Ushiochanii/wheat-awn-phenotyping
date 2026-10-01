@@ -25,25 +25,25 @@ raw scanned page -> automatic recognition -> centerlines -> measured results
 
 Awn Studio automatically identifies spikelets and awn evidence from scanned pages, reconstructs a representative awn path for each spikelet, and converts that path into a calibrated length measurement.
 
-> **Demo GIF placeholder — full-page automatic measurement**
-
-<!-- ![Automatic measurement demo](docs/assets/readme/automatic-measurement.gif) -->
+<p align="center">
+  <img src="docs/assets/readme/automatic-measurement.gif" alt="Awn Studio automatic measurement demo" width="920">
+</p>
 
 ### Review and correct the result
 
 Automatic results remain editable. Users can inspect each spikelet, adjust the awn path, add a missing awn, or remove an incorrect path before accepting the measurement.
 
-> **Demo GIF placeholder — interactive correction in Awn Studio**
-
-<!-- ![Interactive correction demo](docs/assets/readme/manual-correction.gif) -->
+<p align="center">
+  <img src="docs/assets/readme/manual-correction.gif" alt="Awn Studio manual correction demo" width="920">
+</p>
 
 ### Export phenotype measurements
 
 Once review is complete, Awn Studio can export the measurements for downstream analysis instead of leaving the result trapped inside a visualization.
 
-> **Demo GIF placeholder — review complete -> export**
-
-<!-- ![Export demo](docs/assets/readme/export-results.gif) -->
+<p align="center">
+  <img src="docs/assets/readme/export-results.gif" alt="Awn Studio export results demo" width="920">
+</p>
 
 ---
 
