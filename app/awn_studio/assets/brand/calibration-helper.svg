@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 240" role="img" aria-labelledby="title">
+<title>Scale calibration helper</title>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M72 200c13-31 20-68 20-118" stroke="#315e45" stroke-width="5"/>
+<path d="M78 181c-23-11-31-27-31-45 19 5 30 18 34 38" fill="#6e876a" stroke="none"/>
+<path d="M90 154c-14-11-17-25-13-39 14 7 21 18 18 34" fill="#9aab73" stroke="none"/>
+<path d="M96 126c-10-11-9-22-4-32 10 7 14 16 10 28" fill="#c6cd98" stroke="none"/>
+<path d="M102 103l13-32m-19 48l27-35m-31 52l-7-31" stroke="#315e45" stroke-width="3"/>
+<path d="M36 36h204M36 84h204M36 132h204M36 180h204M36 228h204M36 36v192M87 36v192M138 36v192M189 36v192M240 36v192" stroke="#d3dbd2" stroke-width="2" stroke-dasharray="6 7"/>
+<path d="M271 59v118" stroke="#315e45" stroke-width="4" stroke-dasharray="8 8"/>
+<path d="M262 58h18m-18 120h18" stroke="#315e45" stroke-width="4"/>
+<path d="M130 80l46-18" stroke="#607a68" stroke-width="4"/>
+<circle cx="130" cy="80" r="6" fill="#315e45" stroke="#f7f5ed" stroke-width="3"/>
+<circle cx="176" cy="62" r="6" fill="#315e45" stroke="#f7f5ed" stroke-width="3"/>
+<rect x="258" y="92" width="70" height="36" rx="18" fill="#eef3ee" stroke="none"/>
+<text x="293" y="115" text-anchor="middle" font-family="Segoe UI,Arial,sans-serif" font-size="18" font-weight="650" fill="#315e45">5 mm</text>
+</g>
+</svg>

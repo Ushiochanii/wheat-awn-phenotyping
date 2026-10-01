@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title>Awn Studio</title>
+<rect x="4" y="4" width="120" height="120" rx="28" fill="#f7f5ed"/>
+<path d="M45 103c10-16 16-35 17-58" fill="none" stroke="#2b5b45" stroke-width="6" stroke-linecap="round"/>
+<path d="M50 91c-17-8-23-21-24-35 14 4 24 14 28 29" fill="#6f8d6d"/>
+<path d="M59 77c-11-9-12-20-8-30 10 6 15 15 13 27" fill="#9faf79"/>
+<path d="M63 63c-8-9-7-18-2-27 8 6 11 14 8 24" fill="#cad19e"/>
+<path d="M67 49c-5-8-3-15 2-22 6 6 7 13 4 19" fill="#879a62"/>
+<path d="M72 38l9-21M68 47l20-27M62 58l-4-27M56 70l-11-24" stroke="#315e45" stroke-width="3" stroke-linecap="round"/>
+<path d="M94 39v46" stroke="#315e45" stroke-width="4" stroke-linecap="round" stroke-dasharray="5 6"/>
+<path d="M87 38h14M87 86h14" stroke="#315e45" stroke-width="4" stroke-linecap="round"/>
+</svg>

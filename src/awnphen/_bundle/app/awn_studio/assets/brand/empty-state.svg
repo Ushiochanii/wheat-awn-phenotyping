@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" role="img" aria-labelledby="title">
+<title>Import images to begin measurement</title>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<rect x="164" y="64" width="214" height="160" rx="24" fill="#fbfaf5" stroke="#aebdaf" stroke-width="3"/>
+<rect x="183" y="83" width="176" height="122" rx="18" stroke="#9eae9f" stroke-width="3" stroke-dasharray="8 8"/>
+<rect x="224" y="112" width="96" height="60" rx="12" stroke="#728777" stroke-width="4"/>
+<circle cx="249" cy="131" r="7" fill="#bcc8b7" stroke="none"/>
+<path d="M235 160l19-20 15 15 17-19 24 24" stroke="#8fa08e" stroke-width="4"/>
+<circle cx="300" cy="183" r="29" fill="#436d58" stroke="#f7f6ef" stroke-width="5"/>
+<path d="M300 195v-24m0 0l-10 10m10-10l10 10" stroke="#fff" stroke-width="5"/>
+<path d="M106 234c18-30 27-71 28-126" stroke="#315e45" stroke-width="5"/>
+<path d="M112 212c-26-13-35-34-34-56 21 8 34 24 38 48" fill="#688267" stroke="none"/>
+<path d="M128 177c-16-14-18-32-13-48 16 8 24 23 19 42" fill="#98a970" stroke="none"/>
+<path d="M134 143c-10-12-9-25-3-36 11 8 15 19 10 31" fill="#c6cd98" stroke="none"/>
+<path d="M140 119l13-31m-18 47l27-35m-31 54l-8-34" stroke="#315e45" stroke-width="3"/>
+<path d="M120 238h275" stroke="#b2beb3" stroke-width="3"/>
+<path d="M140 238v10m28-10v6m28-6v10m28-10v6m28-6v10m28-10v6m28-6v10m28-10v6m28-6v10" stroke="#a5b2a7" stroke-width="2"/>
+<path d="M399 89v112" stroke="#315e45" stroke-width="4" stroke-dasharray="8 8"/>
+<path d="M391 88h16m-16 114h16" stroke="#315e45" stroke-width="4"/>
+</g>
+</svg>

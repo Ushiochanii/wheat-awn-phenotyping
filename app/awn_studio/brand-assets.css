@@ -1,0 +1,14 @@
+/* Awn Studio brand assets derived from the selected visual direction. */
+.brand-icon{display:block;width:32px;height:32px;object-fit:contain;padding:0;background:transparent;border-radius:9px}
+#empty{gap:0}
+.empty-illustration{display:block;width:min(260px,52%);max-height:190px;object-fit:contain;margin:0 0 6px;opacity:.96;filter:saturate(.88)}
+#empty h2{margin-top:0}
+.calibration-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin:-4px 0 10px}
+.calibration-heading h2{margin:4px 0 5px}
+.calibration-heading-copy{max-width:250px;margin:0!important;color:#75827b;font-size:10.5px!important;line-height:1.45!important}
+.calibration-helper{flex:0 0 auto;width:118px;height:78px;object-fit:contain;opacity:.88}
+@media(max-width:620px){
+  .empty-illustration{width:min(220px,66%);max-height:150px}
+  .calibration-helper{width:92px;height:64px}
+  .calibration-heading{gap:10px}
+}

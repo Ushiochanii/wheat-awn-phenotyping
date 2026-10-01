@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" role="img" aria-labelledby="title">
+<title>Awn Studio</title>
+<g transform="translate(20 18)">
+<path d="M58 138c12-22 18-47 18-84" fill="none" stroke="#2b5b45" stroke-width="7" stroke-linecap="round"/>
+<path d="M63 119c-23-10-31-28-31-47 19 6 31 21 35 39" fill="#6f8d6d"/>
+<path d="M74 91c-14-12-16-27-11-40 13 7 20 19 16 35" fill="#9faf79"/>
+<path d="M80 66c-9-11-8-20-3-30 9 6 12 15 9 26" fill="#c8cf99"/>
+<path d="M86 48l11-28M82 59l23-31M75 77l-7-28" stroke="#315e45" stroke-width="4" stroke-linecap="round"/>
+<path d="M112 48v71" stroke="#315e45" stroke-width="5" stroke-dasharray="7 7"/>
+<path d="M103 47h18m-18 73h18" stroke="#315e45" stroke-width="5" stroke-linecap="round"/>
+</g>
+<text x="172" y="111" font-family="Segoe UI Variable Text,Segoe UI,Arial,sans-serif" font-size="76" font-weight="650" fill="#234f3d" letter-spacing="-1">Awn Studio</text>
+</svg>

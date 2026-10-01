@@ -1,0 +1,20 @@
+src/awnphen/core/
+src/awnphen/modeling/__init__.py
+src/awnphen/modeling/inference/
+src/awnphen/phenotyping/__init__.py
+src/awnphen/phenotyping/detection/
+src/awnphen/phenotyping/inspection/
+src/awnphen/phenotyping/measurement/
+src/awnphen/phenotyping/physical/
+src/awnphen/pipeline/
+src/awnphen/_bundle/app/awn_studio/
+src/awnphen/_bundle/examples/demo_page.jpg
+
+app/awn_studio/                  # readable source mirror; must match packaged bundle
+examples/demo_page.jpg           # readable source mirror; must match packaged bundle
+tests/test_bundle_sync.py
+
+canonical YOLO11N weights external via awnphen.model
+canonical model: anpanchanii/awnphen-yolo11n
+optional scale-probe weights via AWNPHEN_SCALE_PROBE_WEIGHTS
+no training/comparison weights in Git

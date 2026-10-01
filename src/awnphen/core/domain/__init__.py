@@ -1,0 +1,61 @@
+"""领域对象、稳定身份与 provenance 基础设施。"""
+
+from .entities import (
+    AssignmentOverride,
+    AssignmentOverrideSet,
+    AwnMeasurement,
+    AwnSpikeletAssociation,
+    Detection,
+    PageEffectiveSemanticAssignment,
+    PageMeasurement,
+    PageSemanticAssignment,
+    PhysicalAwn,
+    PhysicalSpikelet,
+    SemanticAssignment,
+    seed_awn_from_detection,
+    seed_spikelet_from_detection,
+)
+from .ids import (
+    DetectionId,
+    PhysicalEntityId,
+    SnapshotId,
+    make_detection_id,
+    make_recovery_detection_id,
+    make_physical_awn_id,
+    make_physical_spikelet_id,
+    make_snapshot_id,
+)
+from .provenance import (
+    InferenceProvenance,
+    OperationProvenance,
+    canonical_json_sha256,
+    inference_provenance_from_payload,
+)
+
+__all__ = [
+    "AssignmentOverride",
+    "AssignmentOverrideSet",
+    "PageEffectiveSemanticAssignment",
+    "AwnMeasurement",
+    "AwnSpikeletAssociation",
+    "Detection",
+    "PageMeasurement",
+    "PageSemanticAssignment",
+    "PhysicalSpikelet",
+    "PhysicalAwn",
+    "SemanticAssignment",
+    "seed_spikelet_from_detection",
+    "seed_awn_from_detection",
+    "InferenceProvenance",
+    "OperationProvenance",
+    "SnapshotId",
+    "DetectionId",
+    "PhysicalEntityId",
+    "canonical_json_sha256",
+    "inference_provenance_from_payload",
+    "make_snapshot_id",
+    "make_detection_id",
+    "make_recovery_detection_id",
+    "make_physical_spikelet_id",
+    "make_physical_awn_id",
+]

@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you use AwnPhen in your research, please cite this software."
+title: "AwnPhen: automated wheat awn phenotyping with physical reconstruction and human review"
+type: software
+authors:
+  - family-names: "Sun"
+    given-names: "Junhao"
+    alias: "Ushiochanii"
+version: 0.1.0
+date-released: 2026-10-01
+license: AGPL-3.0
+repository-code: "https://github.com/Ushiochanii/wheat-awn-phenotyping"
+url: "https://github.com/Ushiochanii/wheat-awn-phenotyping"
+keywords:
+  - wheat
+  - awn
+  - phenotyping
+  - computer vision
+  - instance segmentation
+  - plant phenotyping

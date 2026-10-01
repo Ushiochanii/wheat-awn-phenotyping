@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "awnphen"
+version = "0.1.0"
+description = "Automated wheat awn phenotyping with segmentation, physical reconstruction, and human review."
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Sun Junhao"}
+]
+requires-python = ">=3.10"
+keywords = ["wheat", "awn", "phenotyping", "computer vision", "plant phenotyping"]
+dependencies = ["numpy>=1.24", "Pillow>=10", "PyYAML>=6,<7", "shapely>=2,<3", "scipy>=1.10", "scikit-image>=0.22", "opencv-python>=4.8", "ultralytics>=8.3,<9", "huggingface-hub>=0.25"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "build>=1.2"]
+
+[project.urls]
+Homepage = "https://github.com/Ushiochanii/wheat-awn-phenotyping"
+Repository = "https://github.com/Ushiochanii/wheat-awn-phenotyping"
+Model = "https://huggingface.co/anpanchanii/awnphen-yolo11n"
+
+[project.scripts]
+awnphen = "awnphen.cli:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+awnphen = [
+  "_bundle/**/*",
+  "_bundle/**/**/*",
+  "_bundle/**/**/**/*",
+]

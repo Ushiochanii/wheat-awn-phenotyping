@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Awn Studio · Wheat Awn Phenotyping</title>
+  <link rel="icon" type="image/svg+xml" href="assets/brand/app-icon.svg">
+  <link rel="stylesheet" href="style.css?v=20260930-brand1">
+  <link rel="stylesheet" href="brand-assets.css?v=20260930-brand1">
+  <link rel="stylesheet" href="onboarding.css?v=20261001-tour4">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <img class="logo brand-icon" src="assets/brand/app-icon.svg" alt="" aria-hidden="true">
+    <div><strong>Awn Studio</strong><span class="sub" data-i18n="brand.subtitle">Wheat awn phenotyping workbench</span></div>
+  </div>
+  <span class="pill" data-i18n="brand.mode">Local · interactive prototype</span>
+  <div class="header-actions">
+    <span id="save-status" role="status" data-i18n="status.noProject">No project yet</span>
+    <button id="how-to-start" class="icon-button help-button" type="button" aria-label="How to start" title="How to start">?</button>
+    <button id="settings-open" class="icon-button" type="button" aria-label="Settings" title="Settings">⚙</button>
+    <button id="open-project" data-i18n="action.openProject">Open project</button>
+    <button id="save-project" data-i18n="action.saveProject">Save project</button>
+    <button class="primary" id="export" data-i18n="action.export">Export results ↗</button>
+  </div>
+</header>
+<main id="main">
+  <aside class="images">
+    <div class="section-title"><h2 data-i18n="sidebar.images">Images</h2><span id="image-count">0</span></div>
+    <button id="import" class="import" data-i18n="action.import">＋ Import images</button>
+    <div class="image-batch-tools">
+      <label><input id="select-all-images" type="checkbox"> <span data-i18n="action.selectAll">Select all</span></label>
+      <button id="delete-selected-images" class="danger" disabled data-i18n="action.delete">Delete</button>
+    </div>
+    <div id="image-list"></div>
+    <button id="demo" class="demo" data-i18n="action.openDemo">Open sample image</button>
+    <button id="reset-demo" class="demo" hidden data-i18n="action.resetDemo">Reset sample</button>
+    <div class="local-note">Images are processed locally.<br>Calibrate before measuring.</div>
+  </aside>
+
+  <div id="left-resizer" class="panel-resizer" role="separator" aria-label="Resize image panel" aria-orientation="vertical" tabindex="0" title="Drag to resize; double-click to reset"></div>
+
+  <section class="workarea">
+    <div class="image-heading">
+      <div><h1 id="image-title">Start a measurement</h1><p id="image-meta">Import an image or open the sample result</p></div>
+      <div class="scale-actions">
+        <button id="recalibrate" class="scale-button" title="Calibrate or redraw image scale" hidden>↻</button>
+        <button id="calibration-open" class="scale-button" title="Edit current image scale" disabled>⌁ Not calibrated</button>
+      </div>
+    </div>
+
+    <div class="model-bar">
+      <label class="model-picker"><span data-i18n="model.selectorLabel">Model</span><select id="model-select" aria-label="Inference model" disabled><option>Connecting…</option></select></label>
+      <button id="run-model" class="primary" data-i18n="action.runMeasurement">Run automatic measurement</button>
+      <button id="rerun-model" data-i18n="action.rerunMeasurement">Rerun current model</button>
+      <button id="run-pending" data-i18n="action.runPending">Run pending images</button>
+      <button id="stop-batch" hidden data-i18n="action.stopBatch">Stop after current</button>
+      <button id="retry-model" data-i18n="action.reconnectModel">Reconnect</button>
+    </div>
+    <div id="model-runtime-strip" class="model-runtime-strip" aria-label="Automatic measurement status">
+      <span id="model-status" class="model-runtime-status" role="status" data-i18n="model.connecting">Connecting to the local inference service…</span>
+      <progress id="inference-progress" max="1" hidden></progress>
+      <span id="model-elapsed" class="model-elapsed" aria-label="Elapsed time" hidden>0.0 s</span>
+    </div>
+
+    <div class="layer-controls" role="radiogroup" aria-label="Display layer">
+      <strong data-i18n="layers.title">Layers</strong>
+      <button type="button" class="layer-toggle" data-layer="raw" aria-pressed="false">Detection evidence <span id="count-raw"></span></button>
+      <button type="button" class="layer-toggle" data-layer="candidates" aria-pressed="false">Awn candidates <span id="count-candidates"></span></button>
+      <button type="button" class="layer-toggle" data-layer="representatives" aria-pressed="false">Representative awns <span id="count-representatives"></span></button>
+      <button type="button" class="layer-toggle" id="show-edits" aria-pressed="true" data-i18n="layers.edits">Editable annotations</button>
+      <label id="confidence-filter-control" class="confidence-filter" title="Trim automatic low-confidence completion hops from the editable centerline" hidden>
+        <span>Confidence ≥</span>
+        <input id="confidence-filter" type="range" min="0" max="1" step="0.01" value="0" aria-label="Minimum completion confidence">
+        <output id="confidence-filter-value" for="confidence-filter">0.00</output>
+      </label>
+      <span id="candidate-legend" class="candidate-legend" hidden>
+        <span><i style="--legend:#06b6d4"></i>Seed</span>
+        <span><i style="--legend:#3f7bd9"></i>Hop 1</span>
+        <span><i style="--legend:#7657c8"></i>Hop 2</span>
+        <span><i style="--legend:#d1772f"></i>Hop 3+</span>
+      </span>
+      <span id="layer-note"></span>
+    </div>
+
+    <div id="canvas-wrap">
+      <div id="empty">
+        <img class="empty-illustration" src="assets/brand/empty-state.svg" alt="" aria-hidden="true">
+        <h2 data-i18n="canvas.startTitle">Start with an image</h2>
+        <p>Import an image to calibrate and measure representative awns.</p>
+        <button id="empty-import" class="primary">Import local images</button>
+        <p class="muted canvas-formats" data-i18n="canvas.formats">JPG, PNG, WebP · multiple files supported</p>
+      </div>
+      <svg id="canvas" xmlns="http://www.w3.org/2000/svg" tabindex="0" aria-label="Measurement canvas">
+        <image id="photo" x="0" y="0"/>
+        <g id="mask-layers"></g>
+        <g id="inspection-layer" pointer-events="none"></g>
+        <g id="annotations"></g>
+        <g id="draft"></g>
+      </svg>
+      <nav id="canvas-tools" aria-label="Canvas tools">
+        <div class="canvas-tool-section">
+          <button data-tool="select" title="Select objects; drag empty canvas to pan (V)" aria-label="Select and pan" aria-pressed="true"><span aria-hidden="true">✋</span><kbd>V</kbd></button>
+          <button data-tool="box" data-editing-only title="Box-select objects or vertices (B)" aria-label="Box selection" aria-pressed="false"><span aria-hidden="true">□</span><kbd>B</kbd></button>
+          <button id="source-preview-toggle" title="Pin source image preview" aria-label="Pin source image preview" aria-pressed="false"><span aria-hidden="true"></span></button>
+        </div>
+        <div class="canvas-tool-divider" role="separator"></div>
+        <div class="canvas-tool-section editing-tools">
+          <button id="canvas-add-spikelet" data-tool="polygon" data-editing-only title="Add a missed spikelet (P)" aria-label="Add spikelet" aria-pressed="false"><span aria-hidden="true"></span><kbd>P</kbd></button>
+          <button id="canvas-redraw-awn" data-tool="line" data-editing-only title="Redraw representative awn (L)" aria-label="Redraw representative awn" aria-pressed="false"><span aria-hidden="true"></span><kbd>L</kbd></button>
+          <button id="canvas-delete-selection" data-editing-only title="Delete selected objects or vertices (Delete)" aria-label="Delete selection"><span aria-hidden="true"></span></button>
+          <button id="canvas-focus-selection" title="Focus selected spikelet" aria-label="Focus selected spikelet"><span aria-hidden="true"></span></button>
+        </div>
+        <div class="canvas-tool-divider" role="separator"></div>
+        <div class="canvas-tool-section history-tools">
+          <button id="undo" title="Undo (Ctrl / ⌘ Z)" aria-label="Undo"><span aria-hidden="true"></span></button>
+          <button id="redo" title="Redo (Ctrl / ⌘ Shift Z)" aria-label="Redo"><span aria-hidden="true"></span></button>
+        </div>
+      </nav>
+      <div id="drawing-bar" hidden><span id="drawing-count"></span><button id="finish" class="primary" data-i18n="action.finish">Finish · Enter</button><button id="cancel-draw" data-i18n="action.cancel">Cancel · Esc</button></div>
+      <span id="original-badge" hidden data-i18n="canvas.originalPreview">Source image preview · release Ctrl to restore overlays</span>
+    </div>
+    <footer><span id="hint">Wheel to zoom · Space-drag to pan · hold Ctrl to view source image</span><span id="coordinates">—</span></footer>
+  </section>
+
+  <div id="right-resizer" class="panel-resizer" role="separator" aria-label="Resize measurement panel" aria-orientation="vertical" tabindex="0" title="Drag to resize; double-click to reset"></div>
+
+  <aside class="results">
+    <div class="workspace-modes" role="group" aria-label="Workbench mode">
+      <button type="button" data-workspace-mode="measure" aria-pressed="true" data-i18n="mode.measure">Measure</button>
+      <button type="button" data-workspace-mode="inspect" aria-pressed="false" data-i18n="mode.inspect">Inspect</button>
+    </div>
+
+    <section id="measure-pane" class="workspace-pane">
+      <div class="section-title"><h2 data-i18n="sidebar.results">Measurement results</h2><span id="group-count">0 spikelets</span></div>
+      <div class="legend"><span class="dot green"></span>Spikelet <span class="dot amber"></span>Representative awn</div>
+      <div class="review-filters" role="group" aria-label="Review filter">
+        <button type="button" data-review-filter="all" aria-pressed="true" data-i18n="review.filter.all">All</button>
+        <button type="button" data-review-filter="automatic" aria-pressed="false" data-i18n="review.filter.automatic">High confidence</button>
+        <button type="button" data-review-filter="needs_review" aria-pressed="false" data-i18n="review.filter.needsReview">Review suggested</button>
+        <button type="button" data-review-filter="missing" aria-pressed="false" data-i18n="review.filter.missing">Missing</button>
+        <button type="button" data-review-filter="modified" aria-pressed="false" data-i18n="review.filter.modified">Edited</button>
+        <button type="button" data-review-filter="confirmed" aria-pressed="false" data-i18n="review.filter.confirmed">Verified</button>
+      </div>
+      <label class="search"><input id="search" placeholder="Search spikelet ID" aria-label="Search spikelet ID"></label>
+      <div class="table-wrap">
+        <table><thead><tr><th>ID</th><th>Awn length <small>mm</small></th><th>Status</th></tr></thead><tbody id="rows"></tbody></table>
+        <p id="no-results" data-i18n="results.none">No measurements yet.</p>
+      </div>
+      <div id="review-actions" class="review-actions" hidden>
+        <div><span id="review-selected-label">Selected spikelet</span><strong id="review-selected-status">—</strong><small id="review-selected-reasons" class="review-reasons" hidden></small></div>
+        <button id="confirm-selected" class="primary" data-i18n="review.confirm">Confirm</button>
+      </div>
+      <section id="measure-editor" class="measure-editor">
+        <div class="manual-tools"><strong data-i18n="results.manualCorrection">Manual correction</strong><button data-tool="polygon" title="Add a missed spikelet (P)">＋ Add spikelet <kbd>P</kbd></button></div>
+        <div id="edit-empty" class="inspect-empty" data-i18n="edit.empty">Select a spikelet to edit its geometry or awn path.</div>
+        <section id="editor" hidden>
+          <div class="section-title"><h2 data-i18n="editor.title">Edit selected spikelet</h2><button id="focus" data-i18n="action.focus">Focus</button></div>
+          <label><span data-i18n="editor.spikeletId">Spikelet ID</span><input id="group-name" autocomplete="off" maxlength="80"></label>
+          <p id="name-error" role="alert"></p>
+          <div class="length-card"><span data-i18n="editor.awnLength">Representative awn length</span><strong id="selected-length">—</strong></div>
+          <div class="edit-actions"><button id="redraw" class="primary">Redraw representative awn <kbd>L</kbd></button></div>
+          <p class="muted" data-i18n="editor.help">Drag vertices to refine geometry. Click the awn path to add a vertex; Delete removes the current selection. Edits are undoable.</p>
+        </section>
+      </section>
+      <details id="timing-panel"><summary data-i18n="results.processingTime">Processing time</summary><div id="timing-details"></div></details>
+    </section>
+
+    <section id="inspect-pane" class="workspace-pane" hidden>
+      <div class="section-title"><h2 data-i18n="inspect.title">Inspect result</h2><button id="inspect-focus" data-i18n="action.focus">Focus</button></div>
+      <div id="inspect-empty" class="inspect-empty" data-i18n="inspect.empty">Select a spikelet on the canvas to inspect how its representative awn was constructed.</div>
+      <div id="inspect-content" hidden>
+        <div class="inspect-identity"><strong id="inspect-title">Spikelet</strong><span id="inspect-stage-badge">Seed</span></div>
+        <div class="inspect-metrics">
+          <div><span data-i18n="inspect.seedMode">Seed mode</span><strong id="inspect-seed-mode">—</strong></div>
+          <div><span data-i18n="inspect.growthHops">Growth hops</span><strong id="inspect-hop-count">—</strong></div>
+          <div><span data-i18n="inspect.finalLength">Final length</span><strong id="inspect-final-length">—</strong></div>
+          <div><span data-i18n="inspect.branches">Branches</span><strong id="inspect-branch-count">—</strong></div>
+        </div>
+        <p class="inspect-provenance-note" data-i18n="inspect.provenanceNote">Inspect explains the original automatic Unified Growth construction. Manual corrections are stored separately as the editable final result.</p>
+        <label class="inspect-pool-toggle"><input id="inspect-show-pool" type="checkbox"> <span data-i18n="inspect.relatedCandidates">Related candidates</span></label>
+        <div class="inspect-step-control">
+          <button id="inspect-step-back" aria-label="Previous inspection step">◀</button>
+          <input id="inspect-step-slider" type="range" min="0" max="0" value="0" step="1">
+          <button id="inspect-step-forward" aria-label="Next inspection step">▶</button>
+        </div>
+        <strong id="inspect-step-label" data-i18n="inspect.stage.seed">Seed</strong>
+        <dl id="inspect-step-detail" class="inspect-detail"></dl>
+      </div>
+    </section>
+
+  </aside>
+</main>
+
+<dialog id="settings-dialog" class="settings-dialog">
+  <div class="settings-heading">
+    <div>
+      <h2>Settings</h2>
+      <p>Configure Workbench defaults and interface behavior.</p>
+    </div>
+    <button type="button" class="settings-close" data-close="settings-dialog" aria-label="Close settings">×</button>
+  </div>
+  <div class="settings-layout">
+    <nav class="settings-nav" aria-label="Settings categories">
+      <button type="button" data-settings-section="input" aria-pressed="true">Input</button>
+      <button type="button" data-settings-section="measurement" aria-pressed="false">Measurement</button>
+      <button type="button" data-settings-section="review" aria-pressed="false">Review</button>
+      <button type="button" data-settings-section="interface" aria-pressed="false">Interface</button>
+      <button type="button" data-settings-section="project" aria-pressed="false">Project</button>
+      <button type="button" data-settings-section="advanced" aria-pressed="false">Advanced</button>
+    </nav>
+    <div class="settings-body">
+      <section class="settings-section" data-settings-panel="input">
+        <h3>Input processing</h3>
+        <label class="settings-row" for="setting-auto-resolution">
+          <span class="settings-copy"><strong>Automatic resolution adjustment</strong><small>Rescale newly imported inputs when detected spikelet scale falls outside the preferred range.</small></span>
+          <span class="switch"><input id="setting-auto-resolution" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-auto-grid">
+          <span class="settings-copy"><strong>Automatic grid calibration</strong><small>Prefer the 5 mm background-grid detector when an image needs calibration.</small></span>
+          <span class="switch"><input id="setting-auto-grid" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-plausibility">
+          <span class="settings-copy"><strong>Calibration plausibility check</strong><small>Validate automatic grid calibration against detected spikelet scale before accepting it.</small></span>
+          <span class="switch"><input id="setting-plausibility" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-open-calibration">
+          <span class="settings-copy"><strong>Open calibration after import</strong><small>Open the calibration dialog automatically after importing one or more images.</small></span>
+          <span class="switch"><input id="setting-open-calibration" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <p class="settings-note">Resolution adjustment affects newly imported images only. Existing project images are never resampled automatically.</p>
+      </section>
+
+      <section class="settings-section" data-settings-panel="measurement" hidden>
+        <h3>Automatic measurement</h3>
+        <label class="settings-row settings-row-control" for="setting-default-model">
+          <span class="settings-copy"><strong>Default model</strong><small>Choose the model selected when the local inference service connects.</small></span>
+          <select id="setting-default-model" class="settings-select"><option value="">Service default</option></select>
+        </label>
+        <label class="settings-row" for="setting-run-after-calibration">
+          <span class="settings-copy"><strong>Run after calibration</strong><small>Start automatic measurement immediately after a source image is calibrated.</small></span>
+          <span class="switch"><input id="setting-run-after-calibration" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-continue-batch">
+          <span class="settings-copy"><strong>Continue batch after an image fails</strong><small>Continue with later images after a non-service inference error instead of stopping the batch.</small></span>
+          <span class="switch"><input id="setting-continue-batch" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-live-preview">
+          <span class="settings-copy"><strong>Show live inference preview</strong><small>Update the canvas with detection evidence while tiled inference is still running.</small></span>
+          <span class="switch"><input id="setting-live-preview" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-completion-animation">
+          <span class="settings-copy"><strong>Show completion animation</strong><small>Preview Evidence → Candidates → Representative before opening the final editable result.</small></span>
+          <span class="switch"><input id="setting-completion-animation" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+      </section>
+
+      <section class="settings-section" data-settings-panel="review" hidden>
+        <h3>Review behavior</h3>
+        <label class="settings-row settings-row-control" for="setting-default-layer">
+          <span class="settings-copy"><strong>Default result layer</strong><small>Choose which layer is shown after automatic measurement finishes.</small></span>
+          <select id="setting-default-layer" class="settings-select">
+            <option value="edits">Editable annotations</option>
+            <option value="representatives">Representative awns</option>
+            <option value="candidates">Awn candidates</option>
+            <option value="raw">Detection evidence</option>
+          </select>
+        </label>
+        <label class="settings-row settings-row-control" for="setting-default-workspace">
+          <span class="settings-copy"><strong>Default review mode</strong><small>Choose whether completed measurements open in Measure or Inspect mode.</small></span>
+          <select id="setting-default-workspace" class="settings-select">
+            <option value="measure">Measure</option>
+            <option value="inspect">Inspect</option>
+          </select>
+        </label>
+        <label class="settings-row" for="setting-related-candidates">
+          <span class="settings-copy"><strong>Show related candidates by default</strong><small>Open Inspect with the candidate pool overlay enabled.</small></span>
+          <span class="switch"><input id="setting-related-candidates" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-spikelet-context">
+          <span class="settings-copy"><strong>Show spikelet context under awn layers</strong><small>Keep the faint spikelet evidence backdrop visible beneath Candidates and Representative awns.</small></span>
+          <span class="switch"><input id="setting-spikelet-context" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-auto-focus">
+          <span class="settings-copy"><strong>Auto-focus selected spikelet</strong><small>Center the canvas on a spikelet selected from the measurement table.</small></span>
+          <span class="switch"><input id="setting-auto-focus" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-confirm-edits">
+          <span class="settings-copy"><strong>Confirm destructive annotation edits</strong><small>Ask before deleting whole spikelets or representative awn paths. Vertex edits remain immediate.</small></span>
+          <span class="switch"><input id="setting-confirm-edits" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+      </section>
+
+      <section class="settings-section" data-settings-panel="interface" hidden>
+        <h3>Interface</h3>
+        <label class="settings-row" for="setting-remember-layout">
+          <span class="settings-copy"><strong>Remember panel layout</strong><small>Keep the left and right panel widths between sessions.</small></span>
+          <span class="switch"><input id="setting-remember-layout" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-cache-images">
+          <span class="settings-copy"><strong>Keep loaded images in memory</strong><small>Keep visited source images decoded in memory for faster page switching. Uses more RAM.</small></span>
+          <span class="switch"><input id="setting-cache-images" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <p class="settings-note">Canvas zoom and image-specific view positions are still kept transient so each image opens predictably.</p>
+      </section>
+
+      <section class="settings-section" data-settings-panel="project" hidden>
+        <h3>Project</h3>
+        <label class="settings-row" for="setting-restore-project">
+          <span class="settings-copy"><strong>Restore last project on startup</strong><small>Reopen the locally saved Workbench project when this browser loads Awn Studio.</small></span>
+          <span class="switch"><input id="setting-restore-project" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <label class="settings-row" for="setting-confirm-project-replace">
+          <span class="settings-copy"><strong>Confirm before replacing the current project</strong><small>Ask before opening a project file when the current workspace already contains images.</small></span>
+          <span class="switch"><input id="setting-confirm-project-replace" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <p class="settings-note">Turning project restoration off does not delete the saved project. You can turn restoration back on later.</p>
+      </section>
+
+      <section class="settings-section" data-settings-panel="advanced" hidden>
+        <h3>Advanced</h3>
+        <label class="settings-row" for="setting-show-diagnostics">
+          <span class="settings-copy"><strong>Show diagnostics and provenance</strong><small>Show processing-time details and explanatory pipeline provenance in the review interface.</small></span>
+          <span class="switch"><input id="setting-show-diagnostics" type="checkbox" checked><span class="switch-track" aria-hidden="true"></span></span>
+        </label>
+        <p class="settings-note">Scientific reconstruction thresholds remain fixed and are intentionally not exposed as user settings.</p>
+      </section>
+    </div>
+  </div>
+  <div class="dialog-actions settings-actions"><button type="button" data-close="settings-dialog">Done</button></div>
+</dialog>
+
+<dialog id="import-dialog">
+  <h2 data-i18n="import.title">Import images</h2>
+  <p data-i18n="import.help">Choose individual images or a folder. JPG, PNG, and WebP files will be added.</p>
+  <div id="import-dropzone" class="import-dropzone" role="button" tabindex="0" aria-label="Drop JPG, PNG, or WebP images here">
+    <span class="import-dropzone-cross" aria-hidden="true"></span>
+    <span class="import-dropzone-plus" aria-hidden="true">＋</span>
+    <strong data-i18n="import.dropTitle">Drag &amp; drop images here</strong>
+    <span data-i18n="import.dropHelp">Drop JPG, PNG, or WebP files to import them immediately.</span>
+  </div>
+  <div class="import-choices"><button id="choose-images" class="primary" data-i18n="action.chooseImages">Choose images</button><button id="choose-folder" data-i18n="action.chooseFolder">Choose folder</button></div>
+  <div class="dialog-actions"><button data-close="import-dialog">Cancel</button></div>
+</dialog>
+
+<dialog id="scale-dialog">
+  <form id="scale-form">
+    <div class="calibration-heading">
+      <div>
+        <h2 data-i18n="calibration.title">Set calibration</h2>
+        <p class="calibration-heading-copy">Use the image scale to convert pixels into physical awn length.</p>
+      </div>
+      <img class="calibration-helper" src="assets/brand/calibration-helper.svg" alt="" aria-hidden="true">
+    </div>
+    <div class="scale-modes">
+      <label><input type="radio" name="scale-mode" value="line" checked> <span data-i18n="calibration.lineMode">Line calibration</span></label>
+    </div>
+    <section id="scale-line-fields">
+      <p data-i18n="calibration.lineHelp">Draw a line spanning a known distance, then enter its physical length.</p>
+      <button id="draw-scale" type="button" data-i18n="calibration.drawLine">Draw calibration line</button>
+      <p id="scale-pixels" data-i18n="calibration.noLine">No calibration line drawn</p>
+      <label><span data-i18n="calibration.physicalLength">Physical length</span><div class="inline"><input id="scale-value" type="number" min="0.000001" step="any" placeholder="e.g. 5"><select id="scale-unit" aria-label="Calibration unit"><option value="1">mm</option><option value="10">cm</option></select></div></label>
+    </section>
+    <p id="scale-error" role="alert"></p>
+    <p class="muted" data-i18n="calibration.changeHelp">Changing calibration updates all lengths on this image without changing any path geometry.</p>
+    <label class="calibration-batch-option"><input id="scale-apply-matching" type="checkbox"> <span data-i18n="calibration.applyMatching">Apply to uncalibrated source images with the same dimensions</span></label>
+    <p class="muted calibration-batch-help" data-i18n="calibration.applyMatchingHelp">Use this only when those images were captured with the same physical setup.</p>
+    <div class="dialog-actions"><button type="button" data-close="scale-dialog">Cancel</button><button class="primary" type="submit" data-i18n="calibration.apply">Apply calibration</button></div>
+  </form>
+</dialog>
+
+<dialog id="scale-edit-dialog">
+  <form id="scale-edit-form">
+    <h2>Edit image scale</h2>
+    <p class="muted">Adjust the current scale directly without redrawing the calibration line or rerunning grid detection.</p>
+    <label>Millimetres per pixel (mm/px)<input id="scale-edit-ratio" type="number" min="0.000000001" step="any" placeholder="e.g. 0.085"></label>
+    <p id="scale-edit-error" role="alert"></p>
+    <div class="dialog-actions"><button type="button" data-close="scale-edit-dialog">Cancel</button><button class="primary" type="submit">Apply scale</button></div>
+  </form>
+</dialog>
+
+<dialog id="export-dialog">
+  <h2 data-i18n="export.title">Export measurements</h2>
+  <p data-i18n="export.help">Each image is exported as one CSV with two columns: ID and Awn length (mm). Batch export is packaged as ZIP.</p>
+  <p id="export-summary"></p>
+  <p class="muted" data-i18n="export.note">Unmeasured values stay blank rather than becoming zero. Results can be exported before manual confirmation.</p>
+  <p class="muted" data-i18n="export.detailedHelp">Detailed export preserves automatic and final lengths, review state, model, and pipeline provenance.</p>
+  <div class="dialog-actions export-actions"><button data-close="export-dialog">Cancel</button><button id="export-one" data-i18n="export.current">Current image CSV</button><button id="export-detailed" data-i18n="export.detailed">Detailed project CSV</button><button id="export-all" class="primary" data-i18n="export.all">All measurements ZIP</button></div>
+</dialog>
+
+<dialog id="delete-dialog">
+  <h2 data-i18n="delete.title">Delete this spikelet?</h2>
+  <p data-i18n="delete.help">Its representative awn will also be removed. Undo can restore the deletion.</p>
+  <div class="dialog-actions"><button data-close="delete-dialog">Cancel</button><button id="delete-confirm" class="danger" data-i18n="delete.confirm">Delete spikelet and awn</button></div>
+</dialog>
+
+<dialog id="download-dialog">
+  <h2 data-i18n="download.title">File ready</h2>
+  <p id="download-name"></p><p id="download-size"></p>
+  <a id="download-link" class="primary" style="display:inline-block;padding:12px;border-radius:7px" download data-i18n="action.download">Download file</a>
+  <p class="muted" data-i18n="download.help">If an embedded browser cannot download the file, open the workbench in the system browser. Text output can also be copied from the field below.</p>
+  <textarea id="download-text" aria-label="File content; select all to copy" readonly style="width:100%;height:120px" hidden></textarea>
+  <div class="dialog-actions"><button data-close="download-dialog" data-i18n="action.close">Close</button></div>
+</dialog>
+
+<div id="toast" role="status" hidden></div>
+<input id="image-input" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden>
+<input id="project-input" type="file" accept=".json" hidden>
+<input id="folder-input" type="file" accept="image/png,image/jpeg,image/webp" webkitdirectory multiple hidden>
+<script src="boot.js?v=20261001-tour3"></script>
+</body>
+</html>
