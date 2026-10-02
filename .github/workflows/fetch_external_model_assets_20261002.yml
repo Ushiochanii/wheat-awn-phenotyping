@@ -18,7 +18,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          mkdir -p payload/eomt payload/wheels
+          mkdir -p payload/eomt payload/wheels payload/chunks
           python -m pip install --quiet --disable-pip-version-check "huggingface_hub[hf_xet]"
           python - <<'PY'
           from huggingface_hub import snapshot_download
@@ -28,7 +28,6 @@ jobs:
               allow_patterns=["config.json", "preprocessor_config.json", "model.safetensors"],
           )
           PY
-          ls -lh payload/eomt
 
       - name: Build offline Transformers wheel bundle
         shell: bash
@@ -36,23 +35,33 @@ jobs:
           set -euxo pipefail
           python -m pip download --dest payload/wheels "transformers==5.17.0"
           tar -C payload/wheels -czf payload/transformers-wheels-py312-linux.tar.gz .
-          ls -lh payload/transformers-wheels-py312-linux.tar.gz
 
-      - name: Push EoMT assets to workstation
+      - name: Package and split transfer archive
         shell: bash
         run: |
           set -euxo pipefail
-          base="https://sunjunhao-pc.tail42134c.ts.net:10000/upload/9f7c2a1e6d8b4f3aa9c712e5"
+          tar -C payload -czf payload/eomt-assets.tar.gz eomt transformers-wheels-py312-linux.tar.gz
+          sha256sum payload/eomt-assets.tar.gz | awk '{print $1}' > payload/eomt-assets.sha256
+          stat -c '%s' payload/eomt-assets.tar.gz > payload/eomt-assets.bytes
+          split -b 16M -d -a 4 payload/eomt-assets.tar.gz payload/chunks/eomt-assets.part-
+          ls -lh payload/eomt-assets.tar.gz payload/chunks | head -20
+
+      - name: Push chunked EoMT assets to workstation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          base="https://sunjunhao-pc.tail42134c.ts.net:10001/upload/4c8e7f1a3d9b52e68f0c71aa"
           push_file () {
             file="$1"
             name="$2"
-            curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 2 \
+            curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 1 \
               -H "Expect:" \
               -H "X-Filename: $name" \
               --upload-file "$file" \
               "$base"
           }
-          push_file payload/eomt/config.json eomt-config.json
-          push_file payload/eomt/preprocessor_config.json eomt-preprocessor_config.json
-          push_file payload/eomt/model.safetensors eomt-model.safetensors
-          push_file payload/transformers-wheels-py312-linux.tar.gz transformers-wheels-py312-linux.tar.gz
+          push_file payload/eomt-assets.sha256 eomt-assets.sha256
+          push_file payload/eomt-assets.bytes eomt-assets.bytes
+          for part in payload/chunks/eomt-assets.part-*; do
+            push_file "$part" "$(basename "$part")"
+          done
