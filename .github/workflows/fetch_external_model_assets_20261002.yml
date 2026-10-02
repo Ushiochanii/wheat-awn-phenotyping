@@ -1,4 +1,4 @@
-name: Fetch external model assets probe
+name: Fetch external model assets
 
 on:
   push:
@@ -7,28 +7,52 @@ on:
   workflow_dispatch:
 
 jobs:
-  probe:
+  eomt-assets:
     runs-on: ubuntu-latest
     steps:
-      - name: Download EoMT config
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download EoMT-DINOv3 checkpoint
         shell: bash
         run: |
           set -euxo pipefail
-          mkdir -p payload/eomt
-          python -m pip install --quiet --disable-pip-version-check huggingface_hub
+          mkdir -p payload/eomt payload/wheels
+          python -m pip install --quiet --disable-pip-version-check "huggingface_hub[hf_xet]"
           python - <<'PY'
-          from huggingface_hub import hf_hub_download
-          hf_hub_download(
+          from huggingface_hub import snapshot_download
+          snapshot_download(
               repo_id="tue-mps/eomt-dinov3-coco-instance-large-640",
-              filename="config.json",
               local_dir="payload/eomt",
+              allow_patterns=["config.json", "preprocessor_config.json", "model.safetensors"],
           )
           PY
-      - name: Push probe to local workstation
+          ls -lh payload/eomt
+
+      - name: Build offline Transformers wheel bundle
         shell: bash
         run: |
           set -euxo pipefail
-          curl --fail-with-body --retry 3 --retry-all-errors \
-            -H "X-Filename: eomt_config_probe.json" \
-            --data-binary @payload/eomt/config.json \
-            "https://sunjunhao-pc.tail42134c.ts.net:10000/upload/9f7c2a1e6d8b4f3aa9c712e5"
+          python -m pip download --dest payload/wheels "transformers==5.17.0"
+          tar -C payload/wheels -czf payload/transformers-wheels-py312-linux.tar.gz .
+          ls -lh payload/transformers-wheels-py312-linux.tar.gz
+
+      - name: Push EoMT assets to workstation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          base="https://sunjunhao-pc.tail42134c.ts.net:10000/upload/9f7c2a1e6d8b4f3aa9c712e5"
+          push_file () {
+            file="$1"
+            name="$2"
+            curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 2 \
+              -H "Expect:" \
+              -H "X-Filename: $name" \
+              --data-binary "@$file" \
+              "$base"
+          }
+          push_file payload/eomt/config.json eomt-config.json
+          push_file payload/eomt/preprocessor_config.json eomt-preprocessor_config.json
+          push_file payload/eomt/model.safetensors eomt-model.safetensors
+          push_file payload/transformers-wheels-py312-linux.tar.gz transformers-wheels-py312-linux.tar.gz
