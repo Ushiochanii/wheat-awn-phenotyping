@@ -1,0 +1,35 @@
+name: Fetch external model assets probe
+
+on:
+  push:
+    paths:
+      - ".github/workflows/fetch_external_model_assets_20261002.yml"
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download EoMT config
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p payload/eomt
+          python -m pip install --quiet --disable-pip-version-check huggingface_hub
+          python - <<'PY'
+          from huggingface_hub import hf_hub_download
+          from pathlib import Path
+          out = Path("payload/eomt")
+          path = hf_hub_download(
+              repo_id="tue-mps/eomt-dinov3-coco-instance-large-640",
+              filename="config.json",
+              local_dir=out,
+          )
+          print(path)
+          PY
+      - name: Upload probe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-probe
+          path: payload/eomt/config.json
+          retention-days: 1
