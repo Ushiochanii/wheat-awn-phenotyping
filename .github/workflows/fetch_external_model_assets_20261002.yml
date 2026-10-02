@@ -49,7 +49,7 @@ jobs:
             curl --fail-with-body --retry 5 --retry-all-errors --retry-delay 2 \
               -H "Expect:" \
               -H "X-Filename: $name" \
-              --data-binary "@$file" \
+              --upload-file "$file" \
               "$base"
           }
           push_file payload/eomt/config.json eomt-config.json
