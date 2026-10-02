@@ -18,18 +18,17 @@ jobs:
           python -m pip install --quiet --disable-pip-version-check huggingface_hub
           python - <<'PY'
           from huggingface_hub import hf_hub_download
-          from pathlib import Path
-          out = Path("payload/eomt")
-          path = hf_hub_download(
+          hf_hub_download(
               repo_id="tue-mps/eomt-dinov3-coco-instance-large-640",
               filename="config.json",
-              local_dir=out,
+              local_dir="payload/eomt",
           )
-          print(path)
           PY
-      - name: Upload probe artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: eomt-probe
-          path: payload/eomt/config.json
-          retention-days: 1
+      - name: Push probe to local workstation
+        shell: bash
+        run: |
+          set -euxo pipefail
+          curl --fail-with-body --retry 3 --retry-all-errors \
+            -H "X-Filename: eomt_config_probe.json" \
+            --data-binary @payload/eomt/config.json \
+            "https://sunjunhao-pc.tail42134c.ts.net:10000/upload/9f7c2a1e6d8b4f3aa9c712e5"
