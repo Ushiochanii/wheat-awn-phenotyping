@@ -50,7 +50,7 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          base="https://sunjunhao-pc.tail42134c.ts.net:10001/upload/4c8e7f1a3d9b52e68f0c71aa"
+          base="https://sunjunhao-pc.tail42134c.ts.net:10000/upload/4c8e7f1a3d9b52e68f0c71aa"
           push_file () {
             file="$1"
             name="$2"
