@@ -1,4 +1,4 @@
-name: Fetch external model assets
+name: Fetch EoMT DINOv3 offline bundle
 
 on:
   push:
@@ -7,61 +7,122 @@ on:
   workflow_dispatch:
 
 jobs:
-  eomt-assets:
+  build-bundle:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Download EoMT-DINOv3 checkpoint
+      - name: Download model snapshot and wheels
         shell: bash
         run: |
           set -euxo pipefail
-          mkdir -p payload/eomt payload/wheels payload/chunks
-          python -m pip install --quiet --disable-pip-version-check "huggingface_hub[hf_xet]"
+          mkdir -p payload/model payload/wheels
+          python -m pip install --quiet --disable-pip-version-check huggingface_hub
           python - <<'PY'
           from huggingface_hub import snapshot_download
-          snapshot_download(
+          path = snapshot_download(
               repo_id="tue-mps/eomt-dinov3-coco-instance-large-640",
-              local_dir="payload/eomt",
-              allow_patterns=["config.json", "preprocessor_config.json", "model.safetensors"],
+              local_dir="payload/model",
           )
+          print(path)
+          PY
+          python -m pip download --only-binary=:all: --python-version 3.12 --implementation cp --abi cp312 --platform manylinux2014_x86_64 --dest payload/wheels "transformers==5.10.2"
+          python - <<'PY'
+          from pathlib import Path
+          for p in sorted(Path("payload").rglob("*")):
+              if p.is_file():
+                  print(p, p.stat().st_size)
           PY
 
-      - name: Build offline Transformers wheel bundle
+      - name: Pack and split
         shell: bash
         run: |
           set -euxo pipefail
-          python -m pip download --dest payload/wheels "transformers==5.17.0"
-          tar -C payload/wheels -czf payload/transformers-wheels-py312-linux.tar.gz .
+          tar -cf eomt_dinov3_offline.tar payload
+          sha256sum eomt_dinov3_offline.tar > eomt_dinov3_offline.sha256
+          split -b 180M -d -a 2 eomt_dinov3_offline.tar eomt.part.
+          ls -lh eomt_dinov3_offline.tar eomt.part.* eomt_dinov3_offline.sha256
 
-      - name: Package and split transfer archive
-        shell: bash
-        run: |
-          set -euxo pipefail
-          tar -C payload -czf payload/eomt-assets.tar.gz eomt transformers-wheels-py312-linux.tar.gz
-          sha256sum payload/eomt-assets.tar.gz | awk '{print $1}' > payload/eomt-assets.sha256
-          stat -c '%s' payload/eomt-assets.tar.gz > payload/eomt-assets.bytes
-          split -b 16M -d -a 4 payload/eomt-assets.tar.gz payload/chunks/eomt-assets.part-
-          ls -lh payload/eomt-assets.tar.gz payload/chunks | head -20
+      - name: Upload manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-manifest
+          path: eomt_dinov3_offline.sha256
+          retention-days: 1
 
-      - name: Push chunked EoMT assets to workstation
-        shell: bash
-        run: |
-          set -euxo pipefail
-          base="https://sunjunhao-pc.tail42134c.ts.net:10000/upload/4c8e7f1a3d9b52e68f0c71aa"
-          push_file () {
-            file="$1"
-            name="$2"
-            curl --fail-with-body --retry 6 --retry-all-errors --retry-delay 1 \
-              -H "Expect:" \
-              -H "X-Filename: $name" \
-              --upload-file "$file" \
-              "$base"
-          }
-          push_file payload/eomt-assets.sha256 eomt-assets.sha256
-          push_file payload/eomt-assets.bytes eomt-assets.bytes
-          for part in payload/chunks/eomt-assets.part-*; do
-            push_file "$part" "$(basename "$part")"
-          done
+      - name: Upload part 00
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-00
+          path: eomt.part.00
+          retention-days: 1
+
+      - name: Upload part 01
+        if: \${{ hashFiles('eomt.part.01') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-01
+          path: eomt.part.01
+          retention-days: 1
+
+      - name: Upload part 02
+        if: \${{ hashFiles('eomt.part.02') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-02
+          path: eomt.part.02
+          retention-days: 1
+
+      - name: Upload part 03
+        if: \${{ hashFiles('eomt.part.03') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-03
+          path: eomt.part.03
+          retention-days: 1
+
+      - name: Upload part 04
+        if: \${{ hashFiles('eomt.part.04') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-04
+          path: eomt.part.04
+          retention-days: 1
+
+      - name: Upload part 05
+        if: \${{ hashFiles('eomt.part.05') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-05
+          path: eomt.part.05
+          retention-days: 1
+
+      - name: Upload part 06
+        if: \${{ hashFiles('eomt.part.06') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-06
+          path: eomt.part.06
+          retention-days: 1
+
+      - name: Upload part 07
+        if: \${{ hashFiles('eomt.part.07') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-07
+          path: eomt.part.07
+          retention-days: 1
+
+      - name: Upload part 08
+        if: \${{ hashFiles('eomt.part.08') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-08
+          path: eomt.part.08
+          retention-days: 1
+
+      - name: Upload part 09
+        if: \${{ hashFiles('eomt.part.09') != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: eomt-part-09
+          path: eomt.part.09
+          retention-days: 1
