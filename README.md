@@ -190,7 +190,7 @@ Open **Settings → Measurement → Model library**. Models that are already usa
 | **RF-DETR Seg XL** | 81.6% | **17.6%** | 92.1% | 12.84 s/page | 144.5 MB |
 | **Mask2Former Swin-L** | **83.2%** | 20.1% | **95.3%** | 32.96 s/page | **826.0 MB** |
 
-All three structural metrics use the same complete-awn benchmark protocol, and speed is measured with the same full-page timing benchmark. Download size is the actual checkpoint payload stored in the model library.
+All three structural metrics were evaluated on the same held-out **Validation11** benchmark (11 pages, 597 awn ground-truth instances and 464 spikelet ground-truth instances). Speed was measured with the same full-page timing protocol on an **AMD Radeon RX 7800 XT with ROCm**, using 640 × 640 tiles with stride 320. Download size is the actual checkpoint payload stored in the model library.
 
 These three options cover the main trade-offs: **YOLO11N** for routine use, **RF-DETR** for lower fragmentation, and **Mask2Former** for maximum structural coverage.
 
