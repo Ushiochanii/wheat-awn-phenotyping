@@ -83,9 +83,7 @@ Awn Studio does not treat raw segmentation masks as final measurements. The mode
 
 ### 1. Image recognition
 
-Awn Studio starts from instance-segmentation predictions of **awns** and **spikelets**. The workflow is designed around this prediction interface rather than around a single model architecture. During development, multiple segmentation models were evaluated; the public release uses YOLO11N as the default checkpoint.
-
-Large digitized pages are processed with overlapping tiles so that thin awns can be detected without shrinking the full page too aggressively.
+An instance-segmentation model identifies **awns** and **spikelets** in the input image. The predicted masks provide the visual evidence used by the following reconstruction steps.
 
 ### 2. Structural reconstruction
 
@@ -179,7 +177,7 @@ The default public checkpoint is hosted on Hugging Face:
 
 `anpanchanii/awnphen-yolo11n`
 
-YOLO11N is the current default for the public release, not a hard requirement of the overall Awn Studio workflow. The project has been developed and evaluated with multiple segmentation architectures, while the public package keeps one default model for a simpler and more reproducible starting point.
+YOLO11N is the default checkpoint provided with the public release. During development, Awn Studio was evaluated with multiple segmentation architectures.
 
 Awn Studio pins the default checkpoint to a specific repository revision and verifies its SHA-256 checksum before use. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320.
 
