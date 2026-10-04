@@ -19,10 +19,6 @@ def _studio_dir() -> Path:
     return _bundle_root() / "app" / "awn_studio"
 
 
-def _demo_image() -> Path:
-    return _bundle_root() / "examples" / "demo_page.jpg"
-
-
 def _runtime_check(*, download_model: bool) -> tuple[list[str], Path | None]:
     checks = [
         ("numpy", "NumPy"),
@@ -110,15 +106,6 @@ def _run_predict(args) -> int:
     return 0
 
 
-def _run_demo(args) -> int:
-    demo = _demo_image()
-    if not demo.is_file():
-        raise FileNotFoundError("Bundled demo image is missing.")
-    args.image = str(demo)
-    args.output = args.output or "runs/demo"
-    return _run_predict(args)
-
-
 def _run_studio(args) -> int:
     studio = _studio_dir()
     launcher = studio / "serve_model.py"
@@ -168,13 +155,6 @@ def build_parser() -> argparse.ArgumentParser:
     predict.add_argument("--output", default="runs/predict")
     predict.add_argument("--device", default="cpu")
     predict.set_defaults(func=_run_predict)
-
-    demo = sub.add_parser("demo", help="Run the bundled example.")
-    demo.add_argument("--mm-per-px", type=float, help="Override automatic grid calibration.")
-    demo.add_argument("--weights")
-    demo.add_argument("--output")
-    demo.add_argument("--device", default="cpu")
-    demo.set_defaults(func=_run_demo)
 
     studio = sub.add_parser("studio", help="Launch Awn Studio locally.")
     studio.add_argument("--weights")

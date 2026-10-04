@@ -6,7 +6,6 @@ def test_cli_commands_exist():
     help_text = build_parser().format_help()
     assert "setup" in help_text
     assert "predict" in help_text
-    assert "demo" in help_text
     assert "studio" in help_text
 
 

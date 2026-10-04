@@ -1,5 +1,6 @@
 # Current main: deployment-ready Getting Started (2026-10-04)
 
+- Retire the legacy `awnphen demo` CLI path; the maintained example now lives inside Awn Studio via **Open sample image**.
 - Add `awnphen setup` to verify runtime dependencies, prepare the pinned default model, report compute availability, and surface optional scale-probe status.
 - Add `scripts/bootstrap.py` plus Windows and macOS/Linux wrappers for one-command local environment setup.
 - Make the default bootstrap install CPU-only PyTorch on Windows/Linux to avoid unexpectedly pulling a large CUDA runtime; GPU users can preserve a preconfigured PyTorch build with `--keep-torch`.

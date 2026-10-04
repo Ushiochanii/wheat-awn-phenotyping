@@ -161,21 +161,15 @@ From there, the normal workflow is:
 
 The default model is downloaded automatically on first setup, so there is no model file to place manually.
 
-### 3. Try the bundled example
+### 3. Open the example
 
-If you want to confirm the pipeline before using your own images, activate the environment once and then use the shorter `awnphen` commands:
+Before importing your own images, you can try the complete workflow directly in Awn Studio.
 
-```bash
-# Windows PowerShell
-.venv\Scripts\Activate.ps1
+Click **Open sample image** in the left sidebar. The bundled example opens with calibration already prepared. Then click **Run automatic measurement** to run the same segmentation, reconstruction, and measurement pipeline used for your own images.
 
-# macOS / Linux
-source .venv/bin/activate
+You can inspect the result, switch display layers, edit the representative awn if needed, and try the export workflow without preparing any files first.
 
-awnphen demo
-```
-
-You can also run one image directly from the command line:
+If you prefer command-line inference for your own image:
 
 ```bash
 awnphen predict path/to/image.jpg --output runs/my-image

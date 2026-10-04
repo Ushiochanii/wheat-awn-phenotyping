@@ -8,10 +8,8 @@ src/awnphen/phenotyping/measurement/
 src/awnphen/phenotyping/physical/
 src/awnphen/pipeline/
 src/awnphen/_bundle/app/awn_studio/
-src/awnphen/_bundle/examples/demo_page.jpg
 
 app/awn_studio/                  # readable source mirror; must match packaged bundle
-examples/demo_page.jpg           # readable source mirror; must match packaged bundle
 tests/test_bundle_sync.py
 scripts/bootstrap.py
 scripts/setup.sh
