@@ -23,6 +23,8 @@ def test_canonical_blob_is_materialized_with_pt_suffix(tmp_path, monkeypatch):
 
     assert resolved.name == "best.pt"
     assert resolved.suffix == ".pt"
+    assert resolved.is_file()
+    assert not resolved.is_symlink()
     assert resolved.read_bytes() == payload
 
 
