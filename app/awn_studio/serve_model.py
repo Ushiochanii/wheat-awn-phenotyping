@@ -10,6 +10,7 @@ import json
 import os
 import threading
 import uuid
+import webbrowser
 from urllib.parse import unquote, urlparse
 
 import cv2
@@ -319,6 +320,7 @@ if __name__=='__main__':
     parser.add_argument('--host',default='127.0.0.1')
     parser.add_argument('--port',type=int,default=8780)
     parser.add_argument('--device',default='cpu')
+    parser.add_argument('--no-browser',action='store_true')
     args=parser.parse_args()
     server=ThreadingHTTPServer((args.host,args.port),partial(Handler,directory=str(ROOT)))
     server.engine=Engine(
@@ -328,6 +330,9 @@ if __name__=='__main__':
     )
     server.scale_probe=SpikeletScaleProbe(device=args.device)
     server.resolution_gate=ResolutionGate(server.scale_probe)
-    print(f'Awn Studio: http://127.0.0.1:{args.port}/app/awn_studio/ (device {args.device})',flush=True)
+    url=f'http://127.0.0.1:{args.port}/app/awn_studio/'
+    print(f'Awn Studio: {url} (device {args.device})',flush=True)
+    if not args.no_browser:
+        threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     server.serve_forever()
 

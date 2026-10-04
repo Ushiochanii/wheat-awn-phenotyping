@@ -13,6 +13,9 @@ src/awnphen/_bundle/examples/demo_page.jpg
 app/awn_studio/                  # readable source mirror; must match packaged bundle
 examples/demo_page.jpg           # readable source mirror; must match packaged bundle
 tests/test_bundle_sync.py
+scripts/bootstrap.py
+scripts/setup.sh
+scripts/setup.ps1
 
 canonical YOLO11N weights external via awnphen.model
 canonical model: anpanchanii/awnphen-yolo11n

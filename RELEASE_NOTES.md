@@ -1,3 +1,13 @@
+# Current main: deployment-ready Getting Started (2026-10-04)
+
+- Add `awnphen setup` to verify runtime dependencies, prepare the pinned default model, report compute availability, and surface optional scale-probe status.
+- Add `scripts/bootstrap.py` plus Windows and macOS/Linux wrappers for one-command local environment setup.
+- Make the default bootstrap install CPU-only PyTorch on Windows/Linux to avoid unexpectedly pulling a large CUDA runtime; GPU users can preserve a preconfigured PyTorch build with `--keep-torch`.
+- Make `awnphen studio` resolve the default model before startup and open Awn Studio in the browser automatically; `--no-browser`, `--host`, and `--port` are available for headless/custom launches.
+- Expand README setup guidance with the actual first-run UI, model cache behavior, custom-model requirements, and CPU/GPU paths.
+
+---
+
 # Current main: crossing-aware reconstruction (2026-10-02)
 
 - Promote the validated crossing guard into the maintained runtime; each page has independent state.
