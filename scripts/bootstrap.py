@@ -6,6 +6,7 @@ import argparse
 import os
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import sys
 
@@ -17,6 +18,32 @@ def venv_python() -> Path:
     if os.name == "nt":
         return VENV / "Scripts" / "python.exe"
     return VENV / "bin" / "python"
+
+
+def _preflight() -> None:
+    system = platform.system() or "Unknown"
+    machine = platform.machine() or "Unknown"
+    version = platform.python_version()
+    free_gib = shutil.disk_usage(ROOT).free / (1024 ** 3)
+
+    print("Awn Studio preflight")
+    print(f"  Platform: {system} {machine}")
+    print(f"  Python:   {version}")
+    print(f"  Free:     {free_gib:.1f} GiB")
+
+    if sys.version_info < (3, 10):
+        raise SystemExit("Awn Studio requires Python 3.10 or newer.")
+    if sys.version_info >= (3, 13):
+        print("  Note: Python 3.13+ is not yet part of the validated release matrix.")
+    if free_gib < 4:
+        raise SystemExit("Awn Studio needs at least 4 GiB of free disk space for the environment and model cache.")
+    if system == "Darwin" and machine.lower() in {"arm64", "aarch64"}:
+        print("  Compute:  Apple Silicon detected; MPS will be used when available.")
+    elif system == "Darwin":
+        print("  Compute:  Intel macOS detected; CPU runtime will be used by default.")
+    elif machine.lower() not in {"x86_64", "amd64", "arm64", "aarch64"}:
+        print(f"  Warning: architecture {machine} is not in the validated platform set.")
+    print()
 
 
 def main() -> int:
@@ -33,13 +60,16 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if sys.version_info < (3, 10):
-        raise SystemExit("Awn Studio requires Python 3.10 or newer.")
+    _preflight()
 
     created_venv = not VENV.exists()
     if created_venv:
         print(f"[1/5] Creating virtual environment: {VENV}")
-        subprocess.check_call([sys.executable, "-m", "venv", str(VENV)])
+        try:
+            subprocess.check_call([sys.executable, "-m", "venv", str(VENV)])
+        except subprocess.CalledProcessError as error:
+            hint = " On Debian/Ubuntu, install the matching python3-venv package first." if platform.system() == "Linux" else ""
+            raise SystemExit(f"Could not create the virtual environment.{hint}") from error
     else:
         print(f"[1/5] Reusing virtual environment: {VENV}")
 
