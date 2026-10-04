@@ -328,7 +328,7 @@ if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--host',default='127.0.0.1')
     parser.add_argument('--port',type=int,default=8780)
-    parser.add_argument('--device',default='cpu')
+    parser.add_argument('--device',default='auto')
     parser.add_argument('--no-browser',action='store_true')
     args=parser.parse_args()
     server=ThreadingHTTPServer((args.host,args.port),partial(Handler,directory=str(ROOT)))
@@ -337,10 +337,10 @@ if __name__=='__main__':
         physical_closeout_runner=run_workbench_physical_closeout,
         reconciliation_runner=reconcile_workbench_detection_evidence,
     )
-    server.scale_probe=SpikeletScaleProbe(device=args.device)
+    server.scale_probe=SpikeletScaleProbe(device=server.engine.device)
     server.resolution_gate=ResolutionGate(server.scale_probe)
     url=f'http://127.0.0.1:{args.port}/app/awn_studio/'
-    print(f'Awn Studio: {url} (device {args.device})',flush=True)
+    print(f'Awn Studio: {url} (device {server.engine.device})',flush=True)
     if not args.no_browser:
         threading.Timer(0.6, lambda: webbrowser.open(url)).start()
     server.serve_forever()
