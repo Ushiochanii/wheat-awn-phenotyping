@@ -24,3 +24,15 @@ def test_canonical_blob_is_materialized_with_pt_suffix(tmp_path, monkeypatch):
     assert resolved.name == "best.pt"
     assert resolved.suffix == ".pt"
     assert resolved.read_bytes() == payload
+
+
+def test_explicit_pt_symlink_keeps_pt_name(tmp_path):
+    payload = tmp_path / "blob-without-suffix"
+    payload.write_bytes(b"weights")
+    link = tmp_path / "best.pt"
+    link.symlink_to(payload)
+
+    resolved = model.resolve_weights(link)
+
+    assert resolved.name == "best.pt"
+    assert resolved.suffix == ".pt"
