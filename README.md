@@ -79,7 +79,7 @@ Awn Studio does not treat raw segmentation masks as final measurements. The mode
   <img src="docs/assets/readme/pipeline-principle.gif" alt="Awn Studio pipeline from segmentation evidence through awn reconstruction to calibrated measurement" width="920">
 </p>
 
-<p align="center"><sub>Image recognition → awn reconstruction → representative awn → calibrated measurement.</sub></p>
+<p align="center"><sub>Image recognition → awn reconstruction → centerline extraction → calibrated measurement.</sub></p>
 
 ### 1. Image recognition
 
