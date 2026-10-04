@@ -83,7 +83,9 @@ Awn Studio does not treat raw segmentation masks as final measurements. The mode
 
 ### 1. Image recognition
 
-The canonical public model is a YOLO11N instance-segmentation model trained to recognize **awns** and **spikelets**. Large digitized pages are processed with overlapping tiles so that thin awns can be detected without shrinking the full page too aggressively.
+Awn Studio starts from instance-segmentation predictions of **awns** and **spikelets**. The workflow is designed around this prediction interface rather than around a single model architecture. During development, multiple segmentation models were evaluated; the public release uses YOLO11N as the default checkpoint.
+
+Large digitized pages are processed with overlapping tiles so that thin awns can be detected without shrinking the full page too aggressively.
 
 ### 2. Structural reconstruction
 
@@ -169,11 +171,13 @@ Awn Studio can produce:
 
 ## Model and reproducibility
 
-The canonical public checkpoint is hosted on Hugging Face:
+The default public checkpoint is hosted on Hugging Face:
 
 `anpanchanii/awnphen-yolo11n`
 
-Awn Studio pins the canonical model to a specific repository revision and verifies its SHA-256 checksum before use. The maintained inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320.
+YOLO11N is the current default for the public release, not a hard requirement of the overall Awn Studio workflow. The project has been developed and evaluated with multiple segmentation architectures, while the public package keeps one default model for a simpler and more reproducible starting point.
+
+Awn Studio pins the default checkpoint to a specific repository revision and verifies its SHA-256 checksum before use. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320.
 
 Advanced users can also register another compatible local Ultralytics YOLO segmentation checkpoint in **Settings -> Measurement**. Awn Studio keeps only one active model loaded at a time to avoid unnecessary GPU-memory use.
 
