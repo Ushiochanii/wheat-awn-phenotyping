@@ -197,11 +197,9 @@ The current maintained measurement contract uses one scalar millimetre-per-pixel
 
 ---
 
-## Documentation
+## Developer notes
 
-- [Architecture](docs/architecture.md)
-- [Release notes](RELEASE_NOTES.md)
-- [Public release code audit](docs/code-audit-2026-10-01.md)
+The public README is intended to be the main user-facing documentation. A short [architecture note](docs/architecture.md) is kept for contributors and future maintenance.
 
 ---
 
