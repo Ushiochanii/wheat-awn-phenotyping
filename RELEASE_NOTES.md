@@ -6,7 +6,7 @@
  6 | - Add maintained public adapters for Mask R-CNN, RF-DETR segmentation, and Mask2Former segmentation.
  7 | - Add optional `mask2former`, `rfdetr`, and `advanced-models` Python extras instead of bloating the default installation.
  8 | - Move user-supplied local checkpoints under **Advanced · Custom local model**.
- 9 | - Expand Getting Started with an official-model comparison table and model-zoo workflow.
+ 9 | - Expand Getting Started with a unified model comparison table and Model Zoo workflow.
 10 | 
 11 | ---
 12 | 
