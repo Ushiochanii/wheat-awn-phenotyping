@@ -1,9 +1,9 @@
 # Current main: model library (2026-10-04)
 
-- Publish the Awn Studio Model Zoo on Hugging Face with YOLO11N, YOLO11M, YOLO11X, Mask R-CNN R50-FPN V2, RF-DETR Seg XL, and Mask2Former Swin-L.
+- Publish a curated Awn Studio Model Zoo on Hugging Face centered on YOLO11N, RF-DETR Seg XL, and Mask2Former Swin-L.
 - Add a **Model library** section to Settings → Measurement with on-demand **Download / Ready** states and model size, positioning, quality notes, and comparable benchmark timing where available.
 - Keep YOLO11N as the only model prepared by the standard setup; larger checkpoints remain opt-in.
-- Add maintained public adapters for Mask R-CNN, RF-DETR segmentation, and Mask2Former segmentation.
+- Add maintained public adapters for RF-DETR segmentation and Mask2Former segmentation while keeping additional comparison adapters available for advanced local use.
 - Add optional `mask2former`, `rfdetr`, and `advanced-models` Python extras instead of bloating the default installation.
 - Move user-supplied local checkpoints under **Advanced · Custom local model**.
 - Expand Getting Started with a unified model comparison table and Model Zoo workflow.
