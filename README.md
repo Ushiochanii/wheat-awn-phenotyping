@@ -99,15 +99,9 @@ The centerline is normalized at the spikelet base, simplified where needed for s
 
 ---
 
-## Human-in-the-loop review
-
-Automatic measurement is the starting point, not a locked result. Awn Studio keeps the underlying evidence visible, uses **Review Suggested** to surface measurements that deserve attention, and lets users edit a representative awn before confirmation. Projects can also be saved and reopened so review does not have to happen in a single session.
-
----
-
 ## 🚀 Getting started
 
-You only need **Python 3.10+** and **Git** for the standard setup. Start with the default CPU configuration first; once Awn Studio is running, you can add GPU acceleration or switch models later.
+You only need **Python 3.10+** and **Git**.
 
 ### 1. Install Awn Studio
 
@@ -119,17 +113,7 @@ cd wheat-awn-phenotyping
 python scripts/bootstrap.py
 ```
 
-The setup script creates an isolated `.venv`, installs the required packages, prepares the default YOLO11N model, and checks that Awn Studio is ready to run.
-
-Platform-specific wrappers are also available:
-
-```bash
-# Windows PowerShell
-powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
-
-# macOS / Linux
-sh scripts/setup.sh
-```
+The setup script creates an isolated environment, installs the required packages, downloads the default model, and checks that Awn Studio is ready to run.
 
 ### 2. Launch Awn Studio
 
@@ -137,7 +121,7 @@ After setup finishes, start the application:
 
 ```bash
 # Windows
-.venv\Scripts\awnphen.exe studio
+.venv\\Scripts\\awnphen.exe studio
 
 # macOS / Linux
 .venv/bin/awnphen studio
@@ -145,44 +129,13 @@ After setup finishes, start the application:
 
 A browser window should open automatically at `http://127.0.0.1:8780/app/awn_studio/`.
 
-From there, the normal workflow is:
+From there, use the Web interface for calibration, model settings, measurement, review, editing, and export.
 
-**Import image → Calibrate → Run automatic measurement → Review or edit → Export**
+---
 
-The default model is downloaded automatically on first setup, so there is no model file to place manually.
+## Model and reproducibility
 
-### 3. Open the example
-
-Before importing your own images, you can try the complete workflow directly in Awn Studio.
-
-Click **Open sample image** in the left sidebar. The bundled example opens with calibration already prepared. Then click **Run automatic measurement** to run the same segmentation, reconstruction, and measurement pipeline used for your own images.
-
-You can inspect the result, switch display layers, edit the representative awn if needed, and try the export workflow without preparing any files first.
-
-If you prefer command-line inference for your own image:
-
-```bash
-awnphen predict path/to/image.jpg --output runs/my-image
-```
-
-### 4. Use a GPU
-
-The standard setup uses CPU inference so that the first installation is predictable and works without CUDA or ROCm.
-
-If your machine already has a compatible GPU environment, install the appropriate PyTorch build inside `.venv`, then keep that build when running the bootstrap script:
-
-```bash
-python scripts/bootstrap.py --keep-torch
-awnphen studio --device 0
-```
-
-The exact PyTorch installation depends on your NVIDIA CUDA or AMD ROCm environment.
-
-### 5. Choose a model
-
-Not sure which model to use? Keep **YOLO11N**. Choose **RF-DETR Seg XL** when lower fragmentation matters more than speed, or **Mask2Former Swin-L** when structural completeness is the priority.
-
-Open **Settings → Measurement → Model library**. Models that are already usable show **Ready**; optional checkpoints show **Download**.
+Awn Studio verifies downloaded Model Zoo checkpoints against their expected SHA-256 digests. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320, and only one model is kept active at a time to avoid unnecessary GPU-memory use.
 
 | Model | Complete-awn recall ↑ | Fragmentation rate ↓ | Structural coverage ↑ | Speed | Download size |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -191,62 +144,6 @@ Open **Settings → Measurement → Model library**. Models that are already usa
 | **Mask2Former Swin-L** | **83.2%** | 20.1% | **95.3%** | 32.96 s/page | **826.0 MB** |
 
 All three structural metrics were evaluated on the same held-out **Validation11** benchmark (11 pages, 597 awn ground-truth instances and 464 spikelet ground-truth instances). Speed was measured with the same full-page timing protocol on an **AMD Radeon RX 7800 XT with ROCm**, using 640 × 640 tiles with stride 320. Download size is the actual checkpoint payload stored in the model library.
-
-These three options cover the main trade-offs: **YOLO11N** for routine use, **RF-DETR** for lower fragmentation, and **Mask2Former** for maximum structural coverage.
-
-RF-DETR and Mask2Former need their optional Python runtimes:
-
-```bash
-# install both advanced transformer runtimes
-python -m pip install -e ".[advanced-models]"
-
-# or install only one
-python -m pip install -e ".[rfdetr]"
-python -m pip install -e ".[mask2former]"
-```
-
-#### Advanced · use your own checkpoint
-
-Custom local models are still supported, but they are intentionally kept below the curated model library. Open **Settings → Measurement → Advanced · Custom local model** and register the local checkpoint path. For Ultralytics YOLO segmentation checkpoints, use class `0 = awn` and class `1 = spikelet`.
-
-You can also launch Awn Studio with a specific compatible local checkpoint:
-
-```bash
-awnphen studio --weights path/to/best.pt
-```
-
-## Advanced configuration
-
-If you prefer to manage the Python environment yourself instead of using the bootstrap script:
-
-```bash
-python -m venv .venv
-
-# macOS / Linux
-source .venv/bin/activate
-
-# Windows PowerShell
-# .venv\Scripts\Activate.ps1
-
-# Windows / Linux CPU setup
-python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
-
-python -m pip install -e .
-awnphen setup
-awnphen studio
-```
-
-`awnphen setup` checks the runtime, verifies the bundled Awn Studio files, prepares and checksum-verifies the default model, and reports the available compute device.
-
-The optional spikelet scale-probe model is not required for normal measurement. If it is not configured, resolution preflight simply remains unassessed and the image is passed through unchanged.
-
-> **Naming note:** Awn Studio is the public platform name. The Python package and command-line entry point remain `awnphen` for compatibility.
-
----
-
-## Model and reproducibility
-
-Awn Studio verifies downloaded Model Zoo checkpoints against their expected SHA-256 digests. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320, and only one model is kept active at a time to avoid unnecessary GPU-memory use.
 
 Large checkpoint files are hosted on Hugging Face rather than committed to the Git repository.
 
