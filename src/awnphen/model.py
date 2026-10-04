@@ -62,16 +62,24 @@ def resolve_weights(explicit: str | Path | None = None) -> Path:
             f"expected {HF_MODEL_SHA256}, got {actual}."
         )
 
-    # Hugging Face may return a content-addressed blob path whose filename is
-    # only a SHA-256 digest. Ultralytics infers model format from the suffix,
-    # so always expose the canonical checkpoint through a stable .pt path.
-    if path.suffix.lower() == ".pt":
-        return path
-
+    # Hugging Face commonly exposes snapshot files as symlinks into a
+    # content-addressed blob store. Ultralytics may resolve that symlink and
+    # then infer model format from the blob filename, which has no .pt suffix.
+    # Always materialize a real regular file under Awn Studio's own cache.
     CANONICAL_MODEL_DIR.mkdir(parents=True, exist_ok=True)
     materialized = CANONICAL_MODEL_DIR / HF_MODEL_FILENAME
-    if not materialized.is_file() or _sha256(materialized) != HF_MODEL_SHA256:
-        temporary = materialized.with_suffix(".pt.tmp")
-        shutil.copy2(path, temporary)
+    needs_copy = (
+        not materialized.is_file()
+        or materialized.is_symlink()
+        or _sha256(materialized) != HF_MODEL_SHA256
+    )
+    if needs_copy:
+        temporary = CANONICAL_MODEL_DIR / "best.pt.tmp"
+        if temporary.exists() or temporary.is_symlink():
+            temporary.unlink()
+        shutil.copyfile(path, temporary, follow_symlinks=True)
+        if _sha256(temporary) != HF_MODEL_SHA256:
+            temporary.unlink(missing_ok=True)
+            raise RuntimeError("Materialized canonical model checksum mismatch.")
         temporary.replace(materialized)
     return materialized
