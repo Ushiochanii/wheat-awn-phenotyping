@@ -59,3 +59,41 @@ jobs:
                   raise SystemExit(f"Missing wheel assets: {missing}")
           print(f"Verified {wheel.name}")
           PY
+
+
+  macos-bootstrap-smoke:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Bootstrap Awn Studio without model download
+        run: python scripts/bootstrap.py --no-model-download
+
+      - name: Verify macOS runtime
+        run: |
+          .venv/bin/python - <<'PY'
+          from pathlib import Path
+          import platform
+          import torch
+          import awnphen
+          from awnphen.cli import _runtime_check
+
+          missing, weights = _runtime_check(download_model=False)
+          assert missing == []
+          assert weights is None
+          assert platform.system() == "Darwin"
+
+          root = Path(awnphen.__file__).resolve().parent
+          assert (root / "_bundle" / "app" / "awn_studio" / "serve_model.py").is_file()
+
+          if platform.machine().lower() in {"arm64", "aarch64"}:
+              print("Apple Silicon runner detected")
+              print("MPS built:", torch.backends.mps.is_built())
+              print("MPS available:", torch.backends.mps.is_available())
+
+          print("macOS bootstrap smoke passed")
+          PY
