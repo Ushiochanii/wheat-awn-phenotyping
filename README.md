@@ -15,8 +15,10 @@ Awn Studio is a semi-automated platform for measuring wheat awn length from digi
 Awn Studio measures the long, bristle-like **awns** that extend from wheat spikelets. Before analysis, the plant material is prepared as an organized digital image of detached spikelets.
 
 <p align="center">
-  <img src="docs/assets/readme/sample-preparation-cropped.png" alt="From wheat spike to measurement" width="920">
+  <img src="docs/assets/readme/sample-preparation-cropped.png" alt="From wheat spike to measurement" width="760">
 </p>
+
+<br>
 
 The resulting spikelet pages provide a consistent digital format for measurement, while the same material can also be measured manually to create reference data for validation.
 
@@ -29,8 +31,10 @@ Awn length is a widely studied cereal phenotype, and awn morphology is frequentl
 Traditionally, awns are measured either directly with a ruler or manually from digital images in tools such as ImageJ. Direct ruler measurements are quick for a few samples, but curved and delicate awns are difficult to align accurately, and handling the material can distort or damage the structure being measured. Image-based manual tracing avoids some of those problems, but it still requires a person to trace and measure one awn at a time.
 
 <p align="center">
-  <img src="docs/assets/readme/why-awn-studio-cropped.png" alt="Conventional manual awn measurement workflows" width="920">
+  <img src="docs/assets/readme/why-awn-studio-cropped.png" alt="Conventional manual awn measurement workflows" width="720">
 </p>
+
+<br>
 
 At small scale, both approaches are manageable. At larger scale, however, the same repetitive operation is performed hundreds or thousands of times, making the measurement step both time-consuming and difficult to standardize.
 
@@ -41,6 +45,8 @@ Awn Studio grew out of that problem: automate the repetitive part of awn measure
 
 ---
 
+<br>
+
 ## ✨ What can Awn Studio do?
 
 A typical workflow starts with a page of wheat spikelets and ends with reviewed, exportable awn-length measurements.
@@ -50,33 +56,41 @@ A typical workflow starts with a page of wheat spikelets and ends with reviewed,
 Awn Studio identifies spikelets and awn evidence, reconstructs a representative awn path for each spikelet, and converts that path into a calibrated length measurement.
 
 <p align="center">
-  <img src="docs/assets/readme/automatic-measurement.gif" alt="Awn Studio automatic measurement demo" width="920">
+  <img src="docs/assets/readme/automatic-measurement.gif" alt="Awn Studio automatic measurement demo" width="740">
 </p>
+
+<br>
 
 ### Review and correct the result
 
 Automatic results remain editable. Users can inspect each spikelet, adjust the awn path, add a missing awn, or remove an incorrect path before accepting the measurement.
 
 <p align="center">
-  <img src="docs/assets/readme/manual-correction.gif" alt="Awn Studio manual correction demo" width="920">
+  <img src="docs/assets/readme/manual-correction.gif" alt="Awn Studio manual correction demo" width="740">
 </p>
+
+<br>
 
 ### Export phenotype measurements
 
 Reviewed measurements can be exported for downstream analysis instead of remaining trapped inside the visualization interface.
 
 <p align="center">
-  <img src="docs/assets/readme/export-results.gif" alt="Awn Studio export results demo" width="920">
+  <img src="docs/assets/readme/export-results.gif" alt="Awn Studio export results demo" width="700">
 </p>
 
+<br>
+
 ---
+
+<br>
 
 ## ⚙️ How Awn Studio works
 
 Awn Studio does not treat raw segmentation masks as final measurements. The model first provides visual evidence; the pipeline then turns fragmented predictions into a measurable awn path.
 
 <p align="center">
-  <img src="docs/assets/readme/pipeline-principle.gif" alt="Awn Studio pipeline from segmentation evidence through awn reconstruction to calibrated measurement" width="920">
+  <img src="docs/assets/readme/pipeline-principle.gif" alt="Awn Studio pipeline from segmentation evidence through awn reconstruction to calibrated measurement" width="820">
 </p>
 
 <p align="center"><sub>Image recognition → awn reconstruction → centerline extraction → calibrated measurement.</sub></p>
@@ -98,6 +112,8 @@ The selected awn structure is converted into a centerline that provides the geom
 The centerline is normalized at the spikelet base, simplified where needed for stable geometry, and converted from pixels to millimetres using image calibration. Automatic calibration is used only when its quality checks pass; otherwise an explicit manual calibration can be supplied.
 
 ---
+
+<br>
 
 ## 🚀 Getting started
 
@@ -133,6 +149,8 @@ From there, use the Web interface for calibration, model settings, measurement, 
 
 ---
 
+<br>
+
 ## Model and reproducibility
 
 Awn Studio verifies downloaded Model Zoo checkpoints against their expected SHA-256 digests. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320, and only one model is kept active at a time to avoid unnecessary GPU-memory use.
@@ -149,6 +167,8 @@ Large checkpoint files are hosted on Hugging Face rather than committed to the G
 
 ---
 
+<br>
+
 ## Current limitations
 
 Awn Studio is semi-automated rather than fully autonomous. Difficult images can still require human correction, particularly when awns are severely occluded, weakly visible, or confused with neighbouring structures.
@@ -159,11 +179,15 @@ The current maintained measurement contract uses one scalar millimetre-per-pixel
 
 ---
 
+<br>
+
 ## Citation
 
 If you use Awn Studio in research, please cite the software metadata provided in [CITATION.cff](CITATION.cff).
 
 ---
+
+<br>
 
 ## License
 
