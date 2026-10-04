@@ -73,7 +73,7 @@ Reviewed measurements can be exported for downstream analysis instead of remaini
 
 ## ⚙️ How Awn Studio works
 
-Awn Studio does not treat raw segmentation masks as final measurements. The model first provides visual evidence; the pipeline then turns that evidence into a biologically meaningful, measurable awn path.
+Awn Studio does not treat raw segmentation masks as final measurements. The model first provides visual evidence; the pipeline then turns fragmented predictions into a measurable awn path.
 
 <p align="center">
   <img src="docs/assets/readme/pipeline-principle.gif" alt="Awn Studio pipeline from segmentation evidence through awn reconstruction to calibrated measurement" width="920">
@@ -91,7 +91,7 @@ Raw predictions are treated as image evidence rather than finished objects. Comp
 
 ### 3. Centerline extraction
 
-The selected awn structure is skeletonized into a one-pixel-wide centerline. This centerline provides the geometric path used by the downstream normalization and length-measurement steps, rather than measuring directly from the reconstructed mask.
+The selected awn structure is converted into a centerline that provides the geometric path for normalization and length measurement, rather than measuring directly from the reconstructed mask.
 
 ### 4. Physical measurement
 
@@ -101,17 +101,7 @@ The centerline is normalized at the spikelet base, simplified where needed for s
 
 ## Human-in-the-loop review
 
-Awn Studio keeps the automatic result visible and editable rather than hiding the entire process behind a single number.
-
-Core review actions include:
-
-- inspect the original image, model evidence, candidate paths, and selected awn;
-- use **Review Suggested** to prioritize measurements that deserve attention;
-- drag or redraw an awn path, add a missing awn, or delete an incorrect path;
-- rerun measurements after changing the model or calibration;
-- save and reopen projects before exporting reviewed phenotype measurements.
-
-This makes automation the first pass rather than the final authority.
+Automatic measurement is the starting point, not a locked result. Awn Studio keeps the underlying evidence visible, uses **Review Suggested** to surface measurements that deserve attention, and lets users edit a representative awn before confirmation. Projects can also be saved and reopened so review does not have to happen in a single session.
 
 ---
 
@@ -190,24 +180,21 @@ The exact PyTorch installation depends on your NVIDIA CUDA or AMD ROCm environme
 
 ### 5. Choose a model
 
-Awn Studio starts with **YOLO11N**, which is the fastest and recommended default. Other trained checkpoints are available from the [Awn Studio Model Zoo](https://huggingface.co/anpanchanii/awn-studio-model-zoo) and are downloaded only when you choose them.
+Not sure which model to use? Keep **YOLO11N**. Choose **RF-DETR Seg XL** when lower fragmentation matters more than speed, or **Mask2Former Swin-L** when structural completeness is the priority.
 
 Open **Settings → Measurement → Model library**. Models that are already usable show **Ready**; optional checkpoints show **Download**.
 
 | Model | Complete-awn recall ↑ | Fragmentation rate ↓ | Structural coverage ↑ | Speed | Download size |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| **YOLO11N** | **82.7%** | 28.2% | 91.7% | **2.29 s/page** | **5.7 MB** |
-| **YOLO11M** | 81.6% | 22.3% | 91.7% | — | 43.1 MB |
-| **YOLO11X** | — | — | — | — | 119.0 MB |
-| **Mask R-CNN R50-FPN V2** | 62.3% | 31.6% | 85.7% | 4.42 s/page | 350.5 MB |
+| **YOLO11N** | 82.7% | 28.2% | 91.7% | **2.29 s/page** | **5.7 MB** |
 | **RF-DETR Seg XL** | 81.6% | **17.6%** | 92.1% | 12.84 s/page | 144.5 MB |
 | **Mask2Former Swin-L** | **83.2%** | 20.1% | **95.3%** | 32.96 s/page | **826.0 MB** |
 
-The three structural metrics use the same complete-awn benchmark protocol. Speed values are shown only where the model was measured under the same full-page timing benchmark; missing values are intentionally left blank and will be filled after the pending benchmark run. Download size is the actual checkpoint payload stored in the model library.
+All three structural metrics use the same complete-awn benchmark protocol, and speed is measured with the same full-page timing benchmark. Download size is the actual checkpoint payload stored in the model library.
 
-The table is not a simple “larger is better” ranking. **YOLO11N** remains the practical default, **RF-DETR** reduces fragmentation, and **Mask2Former** provides the strongest structural coverage at a much higher storage and runtime cost.
+These three options cover the main trade-offs: **YOLO11N** for routine use, **RF-DETR** for lower fragmentation, and **Mask2Former** for maximum structural coverage.
 
-YOLO11N, YOLO11M, YOLO11X, and Mask R-CNN work with the standard Awn Studio environment after their checkpoints are downloaded. RF-DETR and Mask2Former need their optional Python runtimes:
+RF-DETR and Mask2Former need their optional Python runtimes:
 
 ```bash
 # install both advanced transformer runtimes
@@ -228,7 +215,7 @@ You can also launch Awn Studio with a specific compatible local checkpoint:
 awnphen studio --weights path/to/best.pt
 ```
 
-### Advanced setup
+## Advanced configuration
 
 If you prefer to manage the Python environment yourself instead of using the bootstrap script:
 
@@ -257,25 +244,11 @@ The optional spikelet scale-probe model is not required for normal measurement. 
 
 ---
 
-## Outputs
-
-Awn Studio can produce:
-
-- calibrated awn-length measurements;
-- reconstructed awn paths associated with spikelets;
-- editable project state for later review;
-- CSV phenotype exports;
-- reproducible run artifacts for inspection.
-
----
-
 ## Model and reproducibility
 
-The default public checkpoint remains the pinned YOLO11N model at `anpanchanii/awnphen-yolo11n`. Optional curated checkpoints are published separately in the [Awn Studio Model Zoo](https://huggingface.co/anpanchanii/awn-studio-model-zoo), so larger models do not inflate the Git repository or the standard installation.
+Awn Studio verifies downloaded Model Zoo checkpoints against their expected SHA-256 digests. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320, and only one model is kept active at a time to avoid unnecessary GPU-memory use.
 
-Awn Studio verifies downloaded Model Zoo checkpoints against their expected SHA-256 digests. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320. Only one model is kept active at a time to avoid unnecessary GPU-memory use.
-
-The public Git repository contains the maintained runtime and model adapters, while large checkpoint files remain on Hugging Face. Training history, raw research datasets, benchmark workspaces, publication drafts, archived algorithms, and caches remain outside the public source tree.
+Large checkpoint files are hosted on Hugging Face rather than committed to the Git repository.
 
 ---
 
@@ -286,12 +259,6 @@ Awn Studio is semi-automated rather than fully autonomous. Difficult images can 
 Automatic physical calibration depends on a valid calibration grid or other reliable physical reference. When automatic calibration fails quality control, an explicit manual calibration is required.
 
 The current maintained measurement contract uses one scalar millimetre-per-pixel value for a page.
-
----
-
-## Developer notes
-
-The public README is intended to be the main user-facing documentation. A short [architecture note](docs/architecture.md) is kept for contributors and future maintenance.
 
 ---
 
