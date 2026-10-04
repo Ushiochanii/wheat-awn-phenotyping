@@ -9,11 +9,13 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
+import shutil
 
 HF_MODEL_REPO = "anpanchanii/awnphen-yolo11n"
 HF_MODEL_FILENAME = "best.pt"
 HF_MODEL_REVISION = "7622e142fd3ab720c19f9ed1de085f998eb8c2e6"
 HF_MODEL_SHA256 = "a7a5cf23bf5d35266e4fa6b1dc0244ee802026a381548bcd202f04b3ebf42097"
+CANONICAL_MODEL_DIR = Path.home() / ".cache" / "awn-studio" / "models" / "yolo11n-canonical"
 
 
 def _sha256(path: Path) -> str:
@@ -59,4 +61,17 @@ def resolve_weights(explicit: str | Path | None = None) -> Path:
             "Canonical model checksum mismatch: "
             f"expected {HF_MODEL_SHA256}, got {actual}."
         )
-    return path
+
+    # Hugging Face may return a content-addressed blob path whose filename is
+    # only a SHA-256 digest. Ultralytics infers model format from the suffix,
+    # so always expose the canonical checkpoint through a stable .pt path.
+    if path.suffix.lower() == ".pt":
+        return path
+
+    CANONICAL_MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    materialized = CANONICAL_MODEL_DIR / HF_MODEL_FILENAME
+    if not materialized.is_file() or _sha256(materialized) != HF_MODEL_SHA256:
+        temporary = materialized.with_suffix(".pt.tmp")
+        shutil.copy2(path, temporary)
+        temporary.replace(materialized)
+    return materialized
