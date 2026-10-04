@@ -346,11 +346,27 @@ MODEL_NAME = DEFAULT_MODEL.name
 WEIGHTS = DEFAULT_MODEL.weights
 
 
+def resolve_compute_device(device="auto") -> str:
+    value = str(device or "auto").strip().lower()
+    if value not in {"", "auto"}:
+        return str(device)
+    try:
+        import torch
+        if torch.cuda.is_available():
+            return "0"
+        mps = getattr(torch.backends, "mps", None)
+        if mps is not None and mps.is_available():
+            return "mps"
+    except Exception:
+        pass
+    return "cpu"
+
+
 class Engine:
     """Lazy single-active-model cache used by Awn Studio."""
 
-    def __init__(self, device="cpu", *, physical_closeout_runner=None, reconciliation_runner=None):
-        self.device = device
+    def __init__(self, device="auto", *, physical_closeout_runner=None, reconciliation_runner=None):
+        self.device = resolve_compute_device(device)
         self.physical_closeout_runner = physical_closeout_runner
         self.reconciliation_runner = reconciliation_runner
         self.model = None
@@ -533,4 +549,5 @@ __all__ = [
     "register_custom_model",
     "remove_custom_model",
     "refresh_model_registry",
+    "resolve_compute_device",
 ]
