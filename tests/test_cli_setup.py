@@ -19,3 +19,8 @@ def test_studio_parser_accepts_launch_controls():
     assert args.device == "cpu"
     assert args.port == 8899
     assert args.no_browser is True
+
+
+def test_studio_defaults_to_automatic_device_selection():
+    args = build_parser().parse_args(["studio"])
+    assert args.device == "auto"
