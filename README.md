@@ -24,18 +24,20 @@ The resulting spikelet pages provide a consistent digital format for measurement
 
 ## 💡 Why Awn Studio?
 
-Conventional awn measurement is usually done either directly with a ruler or manually from digital images in tools such as ImageJ.
+Awn length is a widely studied cereal phenotype, and awn morphology is frequently examined in genetics, domestication, adaptation, and agronomic research. Reliable length measurements therefore matter, especially when experiments involve many accessions or large mapping populations.
+
+Traditionally, awns are measured either directly with a ruler or manually from digital images in tools such as ImageJ. Direct ruler measurements are quick for a few samples, but curved and delicate awns are difficult to align accurately, and handling the material can distort or damage the structure being measured. Image-based manual tracing avoids some of those problems, but it still requires a person to trace and measure one awn at a time.
 
 <p align="center">
   <img src="docs/assets/readme/why-awn-studio-cropped.png" alt="Conventional manual awn measurement workflows" width="920">
 </p>
 
-Both approaches work well at small scale, but become slow and repetitive when hundreds or thousands of awns need to be measured consistently.
+At small scale, both approaches are manageable. At larger scale, however, the same repetitive operation is performed hundreds or thousands of times, making the measurement step both time-consuming and difficult to standardize.
 
 > **Why I built Awn Studio**  
 > In one phenotyping experiment, I manually measured awns from more than 500 accessions, covering nearly 5,000 individual awn instances. The samples had already been digitized, yet tracing and measuring the awns one by one in ImageJ still took more than 100 hours and over two weeks of work. That experience made the bottleneck very clear: the measurement step itself needed to become much faster.
 
-Awn Studio was built to reduce that manual workload without turning the result into an opaque black box.
+Awn Studio grew out of that problem: automate the repetitive part of awn measurement, improve consistency, and still keep the result visible and editable when human judgment is needed.
 
 ---
 
