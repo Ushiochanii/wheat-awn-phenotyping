@@ -67,8 +67,10 @@ def _run_setup(args) -> int:
         import torch
         if torch.cuda.is_available():
             print(f"Compute: GPU available ({torch.cuda.get_device_name(0)})")
+        elif getattr(torch.backends, "mps", None) and torch.backends.mps.is_available():
+            print("Compute: Apple MPS available")
         else:
-            print("Compute: CPU ready; no CUDA GPU detected")
+            print("Compute: CPU ready; no supported GPU backend detected")
     except Exception:
         print("Compute: PyTorch available")
     probe_override = os.environ.get("AWNPHEN_SCALE_PROBE_WEIGHTS")
@@ -158,7 +160,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     studio = sub.add_parser("studio", help="Launch Awn Studio locally.")
     studio.add_argument("--weights")
-    studio.add_argument("--device", default="cpu")
+    studio.add_argument(
+        "--device",
+        default="auto",
+        help="Compute device: auto, cpu, mps, or a CUDA/ROCm index such as 0.",
+    )
     studio.add_argument("--host", default="127.0.0.1")
     studio.add_argument("--port", type=int, default=8780)
     studio.add_argument("--no-browser", action="store_true")
