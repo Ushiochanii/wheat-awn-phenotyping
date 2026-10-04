@@ -101,7 +101,7 @@ The centerline is normalized at the spikelet base, simplified where needed for s
 
 ## 🚀 Getting started
 
-You only need **Python 3.10+** and **Git**.
+You only need **Python 3.10–3.12** and **Git**. The installer is validated on Windows and Linux x86_64 and on macOS, including Apple Silicon. Newer Python versions may work but are not yet part of the release test matrix.
 
 ### 1. Install Awn Studio
 
@@ -113,7 +113,7 @@ cd wheat-awn-phenotyping
 python scripts/bootstrap.py
 ```
 
-The setup script creates an isolated environment, installs the required packages, downloads the default model, and checks that Awn Studio is ready to run.
+The setup script performs a platform and disk-space preflight, creates an isolated environment, installs the required packages, downloads the default model, and checks that Awn Studio is ready to run. On Apple Silicon Macs, Awn Studio automatically uses the PyTorch MPS backend when it is available; otherwise it falls back to CPU. Windows and Linux installations remain portable by default, while an existing compatible GPU-enabled PyTorch environment can be retained with `--keep-torch`.
 
 ### 2. Launch Awn Studio
 
