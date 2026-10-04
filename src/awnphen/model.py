@@ -28,14 +28,14 @@ def _sha256(path: Path) -> str:
 
 def resolve_weights(explicit: str | Path | None = None) -> Path:
     if explicit:
-        path = Path(explicit).expanduser().resolve()
+        path = Path(explicit).expanduser()
         if not path.is_file():
             raise FileNotFoundError(f"Model weights not found: {path}")
         return path
 
     env = os.environ.get("AWNPHEN_WEIGHTS")
     if env:
-        path = Path(env).expanduser().resolve()
+        path = Path(env).expanduser()
         if not path.is_file():
             raise FileNotFoundError(f"AWNPHEN_WEIGHTS does not exist: {path}")
         return path
