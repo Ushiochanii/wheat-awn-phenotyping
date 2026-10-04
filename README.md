@@ -117,7 +117,11 @@ This makes automation the first pass rather than the final authority.
 
 ## 🚀 Getting started
 
-Python 3.10+ and Git are required. The fastest route is the bootstrap script, which creates an isolated `.venv`, installs Awn Studio and its Python dependencies, downloads the pinned default YOLO11N checkpoint from Hugging Face, verifies its SHA-256 checksum, and checks that the bundled web application is present.
+You only need **Python 3.10+** and **Git** for the standard setup. Start with the default CPU configuration first; once Awn Studio is running, you can add GPU acceleration or switch models later.
+
+### 1. Install Awn Studio
+
+Clone the repository and run the setup script:
 
 ```bash
 git clone https://github.com/Ushiochanii/wheat-awn-phenotyping.git
@@ -125,9 +129,21 @@ cd wheat-awn-phenotyping
 python scripts/bootstrap.py
 ```
 
-On Windows, `powershell -ExecutionPolicy Bypass -File scripts/setup.ps1` is an equivalent wrapper. On macOS/Linux, `sh scripts/setup.sh` does the same thing.
+The setup script creates an isolated `.venv`, installs the required packages, prepares the default YOLO11N model, and checks that Awn Studio is ready to run.
 
-When setup finishes, launch Awn Studio with:
+Platform-specific wrappers are also available:
+
+```bash
+# Windows PowerShell
+powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
+
+# macOS / Linux
+sh scripts/setup.sh
+```
+
+### 2. Launch Awn Studio
+
+After setup finishes, start the application:
 
 ```bash
 # Windows
@@ -137,11 +153,69 @@ When setup finishes, launch Awn Studio with:
 .venv/bin/awnphen studio
 ```
 
-`awnphen studio` prepares the default model if necessary, starts the local service, and opens the browser at `http://127.0.0.1:8780/app/awn_studio/`. The interface opens as the full review workbench: import an image, calibrate it, run automatic measurement, inspect or edit representative awns, confirm results, and export phenotype measurements.
+A browser window should open automatically at `http://127.0.0.1:8780/app/awn_studio/`.
 
-### Manual installation
+From there, the normal workflow is:
 
-If you prefer to manage the virtual environment yourself:
+**Import image → Calibrate → Run automatic measurement → Review or edit → Export**
+
+The default model is downloaded automatically on first setup, so there is no model file to place manually.
+
+### 3. Try the bundled example
+
+If you want to confirm the pipeline before using your own images, activate the environment once and then use the shorter `awnphen` commands:
+
+```bash
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+
+# macOS / Linux
+source .venv/bin/activate
+
+awnphen demo
+```
+
+You can also run one image directly from the command line:
+
+```bash
+awnphen predict path/to/image.jpg --output runs/my-image
+```
+
+### 4. Use a GPU
+
+The standard setup uses CPU inference so that the first installation is predictable and works without CUDA or ROCm.
+
+If your machine already has a compatible GPU environment, install the appropriate PyTorch build inside `.venv`, then keep that build when running the bootstrap script:
+
+```bash
+python scripts/bootstrap.py --keep-torch
+awnphen studio --device 0
+```
+
+The exact PyTorch installation depends on your NVIDIA CUDA or AMD ROCm environment.
+
+### 5. Use another segmentation model
+
+Awn Studio ships with a pinned YOLO11N checkpoint as the default public model. Most users can simply keep the default.
+
+To add your own compatible Ultralytics YOLO segmentation model, open:
+
+**Settings → Measurement**
+
+Under **Local models**, add the local weights file. Compatible models should use:
+
+- class `0`: awn
+- class `1`: spikelet
+
+You can also start Awn Studio with a specific checkpoint:
+
+```bash
+awnphen studio --weights path/to/best.pt
+```
+
+### Advanced setup
+
+If you prefer to manage the Python environment yourself instead of using the bootstrap script:
 
 ```bash
 python -m venv .venv
@@ -152,54 +226,19 @@ source .venv/bin/activate
 # Windows PowerShell
 # .venv\Scripts\Activate.ps1
 
-# Windows / Linux CPU users: install the CPU-only PyTorch build first
+# Windows / Linux CPU setup
 python -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# macOS users, or GPU users who already installed the correct PyTorch build,
-# can skip the line above.
 python -m pip install -e .
 awnphen setup
 awnphen studio
 ```
 
-`awnphen setup` is the deployment check. It validates the required runtime imports, checks that Awn Studio is bundled correctly, downloads and checksum-verifies the default model, reports whether a supported GPU is visible to PyTorch, and reports whether the optional spikelet scale-probe model is configured.
+`awnphen setup` checks the runtime, verifies the bundled Awn Studio files, prepares and checksum-verifies the default model, and reports the available compute device.
 
-### Model setup
+The optional spikelet scale-probe model is not required for normal measurement. If it is not configured, resolution preflight simply remains unassessed and the image is passed through unchanged.
 
-The public release is ready to use with **one default model**: the pinned YOLO11N segmentation checkpoint at `anpanchanii/awnphen-yolo11n`. The checkpoint is stored in the normal Hugging Face cache rather than committed to Git. You do not need to download or move it manually.
-
-To use a different compatible Ultralytics YOLO segmentation checkpoint, open **Settings → Measurement** in Awn Studio and register the local weights file. A compatible model must use class `0 = awn` and class `1 = spikelet`. You can also launch with an explicit checkpoint:
-
-```bash
-awnphen studio --weights path/to/best.pt
-```
-
-The optional spikelet scale-probe model is not required for measurement. Without it, resolution preflight remains unassessed and passes the image through unchanged. If you have that auxiliary detector, set `AWNPHEN_SCALE_PROBE_WEIGHTS` to its weights file before launching Studio.
-
-### CPU and GPU
-
-CPU mode is the default and requires no special accelerator setup:
-
-```bash
-awnphen studio
-```
-
-To request GPU inference:
-
-```bash
-awnphen studio --device 0
-```
-
-The bootstrap script deliberately installs a CPU-only PyTorch build on Windows and Linux so the default setup is predictable and does not pull a large CUDA runtime by accident. For GPU acceleration, create or reuse `.venv`, install the appropriate CUDA/ROCm PyTorch build for your machine, then run `python scripts/bootstrap.py --keep-torch` before launching with `--device 0`.
-
-You can also verify the pipeline without opening the UI:
-
-```bash
-awnphen demo
-awnphen predict path/to/image.jpg --output runs/my-image
-```
-
-> **Naming note:** Awn Studio is the public platform name. The current Python package and command-line entry point remain `awnphen` for compatibility.
+> **Naming note:** Awn Studio is the public platform name. The Python package and command-line entry point remain `awnphen` for compatibility.
 
 ---
 
