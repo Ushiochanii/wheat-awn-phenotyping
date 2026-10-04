@@ -226,7 +226,13 @@
           <select id="setting-default-model" class="settings-select"><option value="">Service default</option></select>
         </label>
         <div class="settings-model-manager">
-          <div class="settings-copy"><strong>Local models</strong><small>Add a compatible checkpoint by path. Windows drive paths and WSL paths are accepted by the local service.</small></div>
+          <div class="settings-copy"><strong>Official models</strong><small>Download optional Awn Studio checkpoints from the official Hugging Face model zoo. Only YOLO11N is prepared by the standard setup.</small></div>
+          <div id="setting-official-models" class="official-model-list" aria-live="polite"></div>
+          <p id="setting-model-message" class="settings-inline-message" hidden></p>
+        </div>
+        <details class="settings-model-manager settings-advanced-models">
+          <summary><strong>Advanced · Custom local model</strong></summary>
+          <div class="settings-copy"><small>Add your own compatible checkpoint by path. Windows drive paths and WSL paths are accepted by the local service.</small></div>
           <div class="model-add-grid">
             <input id="setting-model-name" class="settings-text" type="text" placeholder="Display name" autocomplete="off">
             <select id="setting-model-adapter" class="settings-select settings-select-wide"></select>
@@ -234,8 +240,7 @@
             <button id="setting-model-add" class="settings-small-button" type="button">Add model</button>
           </div>
           <div id="setting-custom-models" class="custom-model-list" aria-live="polite"></div>
-          <p id="setting-model-message" class="settings-inline-message" hidden></p>
-        </div>
+        </details>
         <label class="settings-row" for="setting-run-after-calibration">
           <span class="settings-copy"><strong>Run after calibration</strong><small>Start automatic measurement immediately after a source image is calibrated.</small></span>
           <span class="switch"><input id="setting-run-after-calibration" type="checkbox"><span class="switch-track" aria-hidden="true"></span></span>

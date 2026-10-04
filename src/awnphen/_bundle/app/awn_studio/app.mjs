@@ -644,6 +644,42 @@ function populateModelAdapterSelect(){
  if(!select.options.length)select.append(new Option('Ultralytics YOLO segmentation','ultralytics_yolo_seg'));
 }
 function setModelManagerMessage(message='',isError=false){const node=$('setting-model-message');if(!node)return;node.hidden=!message;node.textContent=message;node.classList.toggle('error',Boolean(isError));}
+function formatModelSize(bytes){
+ const value=Number(bytes)||0;if(!value)return '';
+ if(value>=1024**3)return (value/1024**3).toFixed(1)+' GB';
+ if(value>=1024**2)return Math.round(value/1024**2)+' MB';
+ return Math.round(value/1024)+' KB';
+}
+function modelSpeedLabel(model){
+ if(Number.isFinite(Number(model.page_seconds)))return Number(model.page_seconds).toFixed(2)+' s/page';
+ if(model.id==='yolo11m-official')return 'Medium';
+ if(model.id==='yolo11x-official')return 'Slow';
+ return '';
+}
+function renderOfficialModelList(){
+ const root=$('setting-official-models');if(!root)return;root.replaceChildren();
+ const official=modelCatalog.filter(model=>model.official);
+ for(const model of official){
+  const row=document.createElement('div');row.className='official-model-row';
+  const copy=document.createElement('div');copy.className='official-model-copy';
+  const heading=document.createElement('div');heading.className='official-model-heading';
+  const strong=document.createElement('strong');strong.textContent=model.name;
+  heading.append(strong);
+  if(model.default){const badge=document.createElement('span');badge.className='model-badge';badge.textContent='Default';heading.append(badge);}
+  if(model.id==='mask2former-swin-l'){const badge=document.createElement('span');badge.className='model-badge quality';badge.textContent='Highest quality';heading.append(badge);}
+  const meta=document.createElement('small');
+  const bits=[model.positioning,formatModelSize(model.size_bytes),modelSpeedLabel(model)].filter(Boolean);
+  meta.textContent=bits.join(' · ');
+  const note=document.createElement('small');note.className='official-model-note';note.textContent=model.quality_note||model.description||'';
+  copy.append(heading,meta,note);
+  const action=document.createElement('button');action.type='button';action.className='settings-small-button';
+  if(model.available){action.textContent='Ready';action.disabled=true;}
+  else if(model.installed&&!model.runtime_ready){action.textContent='Runtime needed';action.disabled=true;action.title=model.runtime_hint||'';}
+  else if(model.downloadable){action.textContent='Download';action.disabled=inferenceRunning;action.onclick=()=>downloadOfficialModel(model.id,action);}
+  else{action.textContent=model.installed?'Ready':'Included';action.disabled=true;}
+  row.append(copy,action);root.append(row);
+ }
+}
 function renderCustomModelList(){
  const root=$('setting-custom-models');if(!root)return;root.replaceChildren();
  const custom=modelCatalog.filter(model=>model.custom);
@@ -668,7 +704,24 @@ function populateModelSelect(catalog,preferredId=''){
  }
  const preferred=modelCatalog.find(model=>model.id===preferredId&&model.available);
  if(preferred)select.value=preferred.id;else applyConfiguredDefaultModel();
- populateSettingsModelSelect();populateModelAdapterSelect();renderCustomModelList();
+ populateSettingsModelSelect();populateModelAdapterSelect();renderOfficialModelList();renderCustomModelList();
+}
+async function downloadOfficialModel(modelId,button){
+ const model=modelCatalog.find(item=>item.id===modelId);if(!model||inferenceRunning)return;
+ const original=button?.textContent??'Download';
+ if(button){button.disabled=true;button.textContent='Downloading…';}
+ setModelManagerMessage(`Downloading ${model.name}…`);
+ try{
+  const result=await inferenceClient.installModel(modelId);
+  await refreshModelCatalog(modelId);
+  const installed=result?.model;
+  if(installed?.runtime_ready)setModelManagerMessage(`${model.name} is ready.`);
+  else setModelManagerMessage(installed?.runtime_hint||`${model.name} downloaded; optional runtime is still required.`,true);
+ }catch(error){
+  setModelManagerMessage(error?.message??`Could not download ${model.name}.`,true);
+ }finally{
+  renderOfficialModelList();
+ }
 }
 function formatInferenceElapsed(ms){
  const seconds=Math.max(0,Number(ms)||0)/1000;

@@ -31,4 +31,3 @@ def write_report(folder):
 if __name__=='__main__':
     import sys
     write_report(sys.argv[1])
-

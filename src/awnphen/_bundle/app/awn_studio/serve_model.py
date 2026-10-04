@@ -29,6 +29,7 @@ from inference_backend import (
     WEIGHTS,
     ROOT,
     SUPPORTED_ADAPTERS,
+    install_official_model,
     model_catalog,
     model_spec,
     register_custom_model,
@@ -144,6 +145,7 @@ class Handler(WorkbenchHandler):
             '/api/calibration-plausibility',
         }
         model_paths = {
+            '/api/models/install',
             '/api/models/register',
             '/api/models/remove',
             '/api/models/preload',
@@ -158,6 +160,13 @@ class Handler(WorkbenchHandler):
                 if not 0 < length <= 64*1024:
                     raise ValueError('Model settings request is too large.')
                 payload = json.loads(self.rfile.read(length))
+                if path == '/api/models/install':
+                    model_id = str(payload.get('model_id') or '')
+                    spec = install_official_model(model_id)
+                    return self.reply({
+                        'model': spec.public(default=spec.id == DEFAULT_MODEL_ID),
+                        'models': model_catalog(),
+                    })
                 if path == '/api/models/register':
                     spec = register_custom_model(
                         name=payload.get('name',''),

@@ -43,6 +43,9 @@ export function createInferenceClient({
 
   const modelInfo = options => request('/api/model', options);
   const models = options => request('/api/models', options);
+  const installModel = modelId => request('/api/models/install', {
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId})
+  });
   const registerModel = payload => request('/api/models/register', {
     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
   });
@@ -101,5 +104,5 @@ export function createInferenceClient({
     return state;
   }
 
-  return Object.freeze({request, modelInfo, models, registerModel, removeModel, preloadModel, submit, job, preview, wait});
+  return Object.freeze({request, modelInfo, models, installModel, registerModel, removeModel, preloadModel, submit, job, preview, wait});
 }

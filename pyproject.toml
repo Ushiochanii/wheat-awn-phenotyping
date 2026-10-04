@@ -17,11 +17,15 @@ dependencies = ["numpy>=1.24", "Pillow>=10", "PyYAML>=6,<7", "shapely>=2,<3", "s
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "build>=1.2"]
+mask2former = ["transformers>=4.56,<6"]
+rfdetr = ["rfdetr>=1.10,<2"]
+advanced-models = ["transformers>=4.56,<6", "rfdetr>=1.10,<2"]
 
 [project.urls]
 Homepage = "https://github.com/Ushiochanii/wheat-awn-phenotyping"
 Repository = "https://github.com/Ushiochanii/wheat-awn-phenotyping"
 Model = "https://huggingface.co/anpanchanii/awnphen-yolo11n"
+ModelZoo = "https://huggingface.co/anpanchanii/awn-studio-model-zoo"
 
 [project.scripts]
 awnphen = "awnphen.cli:main"

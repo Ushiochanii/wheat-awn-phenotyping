@@ -1,3 +1,15 @@
+# Current main: official model zoo (2026-10-04)
+
+- Publish the Awn Studio Model Zoo on Hugging Face with YOLO11N, YOLO11M, YOLO11X, Mask R-CNN R50-FPN V2, RF-DETR Seg XL, and Mask2Former Swin-L.
+- Add an **Official models** section to Settings → Measurement with on-demand **Download / Ready** states and model size, positioning, quality notes, and comparable benchmark timing where available.
+- Keep YOLO11N as the only model prepared by the standard setup; larger checkpoints remain opt-in.
+- Add maintained public adapters for Mask R-CNN, RF-DETR segmentation, and Mask2Former segmentation.
+- Add optional `mask2former`, `rfdetr`, and `advanced-models` Python extras instead of bloating the default installation.
+- Move user-supplied local checkpoints under **Advanced · Custom local model**.
+- Expand Getting Started with an official-model comparison table and model-zoo workflow.
+
+---
+
 # Current main: deployment-ready Getting Started (2026-10-04)
 
 - Retire the legacy `awnphen demo` CLI path; the maintained example now lives inside Awn Studio via **Open sample image**.

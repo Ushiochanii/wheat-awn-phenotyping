@@ -25,4 +25,4 @@ Lucide is licensed under the ISC License. Copyright notices and the ISC license 
 
 ## Python dependencies
 
-Runtime dependencies such as NumPy, SciPy, scikit-image, OpenCV, Pillow, Shapely, PyYAML, Hugging Face Hub, and their transitive dependencies are not relicensed by AwnPhen. Their respective upstream licenses continue to apply.
+Runtime dependencies such as NumPy, SciPy, scikit-image, OpenCV, Pillow, Shapely, PyYAML, Hugging Face Hub, PyTorch/TorchVision, Transformers, RF-DETR, and their transitive dependencies are not relicensed by Awn Studio. Their respective upstream licenses continue to apply.

@@ -188,20 +188,39 @@ awnphen studio --device 0
 
 The exact PyTorch installation depends on your NVIDIA CUDA or AMD ROCm environment.
 
-### 5. Use another segmentation model
+### 5. Choose an official model
 
-Awn Studio ships with a pinned YOLO11N checkpoint as the default public model. Most users can simply keep the default.
+Awn Studio starts with **YOLO11N**, which is the fastest and recommended default. Several larger or architecturally different checkpoints are also available from the official [Awn Studio Model Zoo](https://huggingface.co/anpanchanii/awn-studio-model-zoo), but they are downloaded only when you choose them.
 
-To add your own compatible Ultralytics YOLO segmentation model, open:
+Open **Settings → Measurement → Official models**. Models that are already usable show **Ready**; optional checkpoints show **Download**.
 
-**Settings → Measurement**
+| Model | Best for | Key result | Speed |
+| --- | --- | --- | --- |
+| **YOLO11N** | Default / routine use | Validation MAE **1.79 mm** | **2.29 s/page** · fastest |
+| **YOLO11M** | Higher-accuracy YOLO | Lowest YOLO11 validation MAE: **1.68 mm** | Medium |
+| **YOLO11X** | Extra-large YOLO comparison | Larger model; not consistently better on downstream length error | Slow |
+| **Mask R-CNN R50-FPN V2** | Classical CNN baseline | Complete-awn recall **62.3%** | **4.42 s/page** |
+| **RF-DETR Seg XL** | Low-fragmentation transformer segmentation | Complete-awn recall **81.6%** | **12.84 s/page** |
+| **Mask2Former Swin-L** | **Highest-quality structural segmentation** | Complete-awn recall **83.2%**; strongest structural coverage in the maintained comparison | **32.96 s/page** |
 
-Under **Local models**, add the local weights file. Compatible models should use:
+The exact page timings above come from the same benchmark page using 640 px tiled inference with stride 320. YOLO11M and YOLO11X were not timed under that exact benchmark protocol, so they are shown qualitatively rather than given invented precision.
 
-- class `0`: awn
-- class `1`: spikelet
+YOLO11N, YOLO11M, YOLO11X, and Mask R-CNN work with the standard Awn Studio environment after their checkpoints are downloaded. RF-DETR and Mask2Former need their optional Python runtimes:
 
-You can also start Awn Studio with a specific checkpoint:
+```bash
+# install both advanced transformer runtimes
+python -m pip install -e ".[advanced-models]"
+
+# or install only one
+python -m pip install -e ".[rfdetr]"
+python -m pip install -e ".[mask2former]"
+```
+
+#### Advanced · use your own checkpoint
+
+Custom local models are still supported, but they are intentionally kept below the official model choices. Open **Settings → Measurement → Advanced · Custom local model** and register the local checkpoint path. For Ultralytics YOLO segmentation checkpoints, use class `0 = awn` and class `1 = spikelet`.
+
+You can also launch Awn Studio with a specific compatible local checkpoint:
 
 ```bash
 awnphen studio --weights path/to/best.pt
@@ -250,17 +269,11 @@ Awn Studio can produce:
 
 ## Model and reproducibility
 
-The default public checkpoint is hosted on Hugging Face:
+The default public checkpoint remains the pinned YOLO11N model at `anpanchanii/awnphen-yolo11n`. The optional official checkpoints are published separately in the [Awn Studio Model Zoo](https://huggingface.co/anpanchanii/awn-studio-model-zoo), so larger models do not inflate the Git repository or the standard installation.
 
-`anpanchanii/awnphen-yolo11n`
+Awn Studio verifies downloaded official checkpoints against their expected SHA-256 digests. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320. Only one model is kept active at a time to avoid unnecessary GPU-memory use.
 
-YOLO11N is the default checkpoint provided with the public release. During development, Awn Studio was evaluated with multiple segmentation architectures.
-
-Awn Studio pins the default checkpoint to a specific repository revision and verifies its SHA-256 checksum before use. The maintained default inference configuration uses 640 px model input with overlapping 640 px tiles and stride 320.
-
-Advanced users can also register another compatible local Ultralytics YOLO segmentation checkpoint in **Settings -> Measurement**. Awn Studio keeps only one active model loaded at a time to avoid unnecessary GPU-memory use.
-
-The public repository intentionally contains the maintained runtime rather than the full research workspace. Training history, raw research datasets, benchmark workspaces, publication drafts, archived algorithms, caches, and comparison-model checkpoints are excluded.
+The public Git repository contains the maintained runtime and model adapters, while large checkpoint files remain on Hugging Face. Training history, raw research datasets, benchmark workspaces, publication drafts, archived algorithms, and caches remain outside the public source tree.
 
 ---
 
