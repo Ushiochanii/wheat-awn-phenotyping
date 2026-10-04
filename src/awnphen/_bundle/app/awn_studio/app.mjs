@@ -652,8 +652,6 @@ function formatModelSize(bytes){
 }
 function modelSpeedLabel(model){
  if(Number.isFinite(Number(model.page_seconds)))return Number(model.page_seconds).toFixed(2)+' s/page';
- if(model.id==='yolo11m-official')return 'Medium';
- if(model.id==='yolo11x-official')return 'Slow';
  return '';
 }
 function renderOfficialModelList(){
