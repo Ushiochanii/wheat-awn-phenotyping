@@ -101,7 +101,7 @@ The centerline is normalized at the spikelet base, simplified where needed for s
 
 ## 🚀 Getting started
 
-You only need **Python 3.10–3.12** and **Git**. The installer is validated on Windows and Linux x86_64 and on macOS, including Apple Silicon. Newer Python versions may work but are not yet part of the release test matrix.
+You only need **Python 3.10+** and **Git**. Python 3.10–3.12 are currently covered by the release test matrix; newer Python versions are allowed and the installer will continue when the required wheels are available. The installer is validated on Windows and Linux x86_64 and on macOS, including Apple Silicon.
 
 ### 1. Install Awn Studio
 
