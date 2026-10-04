@@ -89,11 +89,15 @@ Large digitized pages are processed with overlapping tiles so that thin awns can
 
 ### 2. Structural reconstruction
 
-Raw predictions are treated as image evidence rather than finished objects. Compatible fragments are associated with nearby spikelets and progressively assembled into candidate awn paths. One representative awn is then selected for each spikelet.
+Raw predictions are treated as image evidence rather than finished objects. Compatible fragments are associated with nearby spikelets and progressively assembled into candidate awn structures. One representative awn is then selected for each spikelet.
 
-### 3. Physical measurement
+### 3. Centerline extraction
 
-The selected path is normalized at the spikelet base and converted from pixels to millimetres using image calibration. Automatic calibration is used only when its quality checks pass; otherwise an explicit manual calibration can be supplied.
+The selected awn structure is skeletonized into a one-pixel-wide centerline. This centerline provides the geometric path used by the downstream normalization and length-measurement steps, rather than measuring directly from the reconstructed mask.
+
+### 4. Physical measurement
+
+The centerline is normalized at the spikelet base, simplified where needed for stable geometry, and converted from pixels to millimetres using image calibration. Automatic calibration is used only when its quality checks pass; otherwise an explicit manual calibration can be supplied.
 
 ---
 
