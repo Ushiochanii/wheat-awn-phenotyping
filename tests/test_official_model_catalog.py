@@ -19,33 +19,24 @@ def _backend(monkeypatch, tmp_path):
         sys.path.remove(str(STUDIO))
 
 
-def test_official_model_catalog_has_curated_six(monkeypatch, tmp_path):
+def test_model_library_has_curated_three(monkeypatch, tmp_path):
     backend = _backend(monkeypatch, tmp_path)
     models = backend.model_catalog()
-    official = [item for item in models if item["official"]]
-    assert [item["id"] for item in official] == [
+    curated = [item for item in models if item["official"]]
+    assert [item["id"] for item in curated] == [
         "yolo11n-canonical",
-        "yolo11m-official",
-        "yolo11x-official",
-        "maskrcnn-r50-fpn-v2",
         "rfdetr-seg-xl",
         "mask2former-swin-l",
     ]
-    assert official[0]["default"] is True
-    assert official[0]["positioning"] == "Default / fastest"
-    assert official[-1]["positioning"] == "Highest-quality structural model"
-    assert official[-1]["page_seconds"] > official[0]["page_seconds"]
+    assert curated[0]["default"] is True
+    assert curated[0]["positioning"] == "Default / fastest"
+    assert curated[-1]["positioning"] == "Highest-quality structural model"
+    assert curated[-1]["page_seconds"] > curated[0]["page_seconds"]
 
 
 def test_optional_models_are_downloadable_not_preinstalled(monkeypatch, tmp_path):
     backend = _backend(monkeypatch, tmp_path)
     models = {item["id"]: item for item in backend.model_catalog()}
-    for model_id in (
-        "yolo11m-official",
-        "yolo11x-official",
-        "maskrcnn-r50-fpn-v2",
-        "rfdetr-seg-xl",
-        "mask2former-swin-l",
-    ):
+    for model_id in ("rfdetr-seg-xl", "mask2former-swin-l"):
         assert models[model_id]["downloadable"] is True
         assert models[model_id]["installed"] is False
