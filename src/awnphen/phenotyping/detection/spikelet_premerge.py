@@ -15,12 +15,9 @@ from shapely import affinity
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
-from awnphen.core.domain.physical import DetectionEvidence, HypothesisStatus, InstanceHypothesis
+from awnphen.core.domain.physical import HypothesisStatus, InstanceHypothesis
 from awnphen.core.domain.physical_provenance import OperationProvenance
-from awnphen.phenotyping.physical.spikelet_cleanup import (
-    evaluate_border_artifact,
-    evaluate_layout_free_spikelet_candidates,
-)
+from awnphen.phenotyping.physical.spikelet_cleanup import evaluate_border_artifact
 
 SPIKELET_PREMERGE_IMPLEMENTATION = "awnphen_next.spikelet_premerge_v1"
 
@@ -117,7 +114,6 @@ def preprocess_spikelet_hypotheses(
     y_period_px_5mm: float,
     config: SpikeletPremergeConfig = SpikeletPremergeConfig(),
     forced_attachments: Sequence[tuple[str, str]] = (),
-    evidence_by_id: dict[str, DetectionEvidence] | None = None,
     page_width_px: int | None = None,
     page_height_px: int | None = None,
 ) -> SpikeletPremergeResult:
@@ -158,32 +154,6 @@ def preprocess_spikelet_hypotheses(
     filtered: list[SpikeletFilterDecision] = []
     filtered_ids: set[str] = set()
 
-    border_records: dict[str, dict] = {}
-    if page_width_px is not None and evidence_by_id is not None and candidates:
-        diagnostic_items = []
-        for item in candidates:
-            confidences = []
-            for evidence_id in item.evidence_ids:
-                evidence = evidence_by_id.get(str(evidence_id))
-                if evidence is None:
-                    raise ValueError(
-                        f"missing source evidence for spikelet premerge border cleanup: {evidence_id}"
-                    )
-                if evidence.class_name != "spikelet":
-                    raise ValueError("spikelet hypothesis source evidence must be spikelet")
-                confidences.append(float(evidence.confidence))
-            diagnostic_items.append(
-                {
-                    "geometry": item.geometry,
-                    "confidence": max(confidences) if confidences else 0.0,
-                }
-            )
-        records = evaluate_layout_free_spikelet_candidates(tuple(diagnostic_items))
-        border_records = {
-            str(item.hypothesis_id): dict(record)
-            for item, record in zip(candidates, records)
-        }
-
     for item in candidates:
         area_mm2 = float(item.geometry.area) * 25.0 / (
             float(x_period_px_5mm) * float(y_period_px_5mm)
@@ -203,11 +173,9 @@ def preprocess_spikelet_hypotheses(
             reasons.append("tiny_area")
         if area_mm2 > config.max_area_mm2 and major_axis_mm > config.max_major_axis_mm:
             reasons.append("oversized_area_and_length")
-        if page_width_px is not None and evidence_by_id is not None:
-            record = border_records[str(item.hypothesis_id)]
+        if page_width_px is not None:
             border = evaluate_border_artifact(
                 physical_spikelet_id=str(item.hypothesis_id),
-                isolated_small_suspicious=bool(record["isolated_small_suspicious"]),
                 geometry=item.geometry,
                 page_width_px=int(page_width_px),
                 page_height_px=int(page_height_px),
