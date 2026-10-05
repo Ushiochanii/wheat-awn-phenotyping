@@ -306,7 +306,13 @@ def run_workbench_pipeline(
 
     period = 5.0 / float(mm_per_px)
     calibration = {
-        PAGE_ID: {"x": period, "y": period, "adequate": True}
+        PAGE_ID: {
+            "x": period,
+            "y": period,
+            "adequate": True,
+            "page_width_px": width,
+            "page_height_px": height,
+        }
     }
     progress(
         (
