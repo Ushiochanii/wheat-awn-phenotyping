@@ -13,105 +13,91 @@ current Awn Studio / Unified Growth route. The goals were:
 The locked Test11 set was not used for threshold selection or tuning. Safety checks
 below use train + validation human spikelet annotations only.
 
-## Border-artifact migration
+## Unified border-artifact cleanup
 
-The old logic was not deleted. It remains in:
+The historical small-border rule and the newer giant-border failure are now handled
+by one geometry-only evaluator in:
 
 - `src/awnphen/phenotyping/physical/spikelet_cleanup.py`
-- historical origin: `src/awnphen_next/border_artifact.py` at commit `238727a`
-- implementation label: `phase4c_border_strip_diagnostic_v1`
+- implementation label: `border_following_v3`
 
-Its policy is intentionally conservative. A spikelet is rejected as a border strip
-only when all three conditions hold:
+The final rule no longer depends on candidate size, local-neighbour status, or an
+"extreme strip" category:
 
-1. the geometry touches the page border within 2 px;
-2. the layout-free local-neighbor evaluator marks it `isolated_small_suspicious`;
-3. its bounding-box major axis is parallel to the touched border, with aspect ratio
-   at least 2.0.
+```text
+touch page border
+AND major axis is parallel to that border (<= 15°)
+AND >= 60% of the candidate's longitudinal span stays inside a narrow edge band
+```
 
-The Workbench still ran this old physical-spikelet cleanup on its seed objects.
-However, the newer Unified Growth page runner independently re-reconciled spikelet
-evidence and called `preprocess_spikelet_hypotheses()` without page dimensions or
-the old border diagnostic. Therefore a spikelet rejected by the outer Workbench
-cleanup could still enter Unified Growth orientation, seeding, and growth context.
+The edge band is resolution-aware: `max(4 px, 0.2% of the shorter page dimension)`.
+The overlap metric is longitudinal rather than area-based, so a thin and a thick
+border strip are treated consistently. A normal spikelet that only touches the
+border at a tip or short segment is retained.
 
-The current migration reuses the existing implementation rather than duplicating it:
+Replaying the new rule over all 4,273 train+validation human spikelet annotations
+rejected **0 / 4,273** GT spikelets. In this corpus, no true spikelet simultaneously
+touched the page edge and had its minimum-rotated-rectangle major axis within 15°
+of that edge, leaving a wide safety margin for the 60% following-fraction gate.
 
-- `src/awnphen/phenotyping/detection/spikelet_premerge.py`
-  now accepts source evidence and optional page dimensions, runs the existing
-  layout-free evaluator, calls `evaluate_border_artifact()`, and records
-  `border_artifact` as a filter reason;
-- `src/awnphen/phenotyping/physical/growth/pipeline.py` supplies source evidence and
-  page dimensions to premerge;
-- `src/awnphen/pipeline/workbench.py` includes page width/height in the per-page
-  calibration/context mapping used by Unified Growth.
+The same evaluator is used by both the physical cleanup record and Unified Growth
+premerge, so small and giant page-edge artifacts now share exactly one rule.
 
-The existing premerge rules remain independent:
+The Unified Growth call path receives page dimensions before orientation, seed
+discovery and growth. Existing independent filters remain:
 
 - `tiny_area`: area < 10 mm²;
 - `awn_overlap_contamination`;
 - `oversized_area_and_length`: area > 250 mm² AND calibrated major axis > 45 mm;
 - fragment attachment.
 
-### Safety check
+Focused regression tests after the unified change:
 
-The legacy border-artifact rule was replayed over all 4,273 human spikelet
-annotations in train + validation. It rejected **0 / 4,273** GT spikelets.
-
-Focused regression tests after migration:
-
-- spikelet premerge;
+- spikelet premerge, including small-border, giant-border and normal-border cases;
 - Unified Growth;
 - Workbench pipeline service.
 
-Result: **21 / 21 passed**.
-
-### Important limitation
-
-The old border rule is a detector for **isolated small border strips**. It is not a
-general "anything long at the page edge is false" rule.
-
-The newly observed giant edge strips can evade it because their area is not small
-relative to their local neighbors. Therefore restoring this legacy rule fixes the
-missing call-path parity, but it should not be claimed to solve every giant
-page-edge strip. Those cases should be evaluated separately on train/validation,
-likely using a physical-shape envelope such as border contact + border-parallel
-elongation / thinness, rather than weakening the old rule in place.
+Result: **23 / 23 passed**.
 
 ## Legacy treasure audit
 
-### HIGH: low-confidence structural-consensus recovery
+### Low-confidence logic: partly already absorbed by Unified Growth
 
 Historical locations:
 
 - `docs/history/2026-09-development/legacy-python/awnphen_legacy/postprocessing/reconstruction/low_confidence.py`
 - `docs/history/2026-09-development/legacy-python/awnphen_legacy/postprocessing/reconstruction/low_confidence_stage.py`
-- `archive/source_history/physical_closeout_20260925/completion/stages.py`
 
-What it did:
+The old route had a distinct low-confidence rescue stage based on repeated
+cross-tile structural consensus. That exact stage is **not** active now, but its
+core idea was partly absorbed into Unified Growth:
 
-- recovered missing proximal + distal evidence only when multiple overlapping
-  low-confidence detections agreed structurally;
-- required support from multiple lower and upper tiles and a unique qualifying
-  cluster;
-- used overlap, axis-angle and spatial-extension gates instead of trusting one
-  low-confidence prediction.
+- Awn supports retain prediction confidence in `growth/supports.py`;
+- morphology-guided continuation uses confidence directly in the association gain:
+  `confidence * log1p(extension / scale) - geometric_energy`;
+- highly overlapping detections are compacted before growth into a shared support
+  hypothesis, preserving the strongest member confidence and union geometry.
 
-Current status:
+This is similar in spirit, but it is not the old multi-tile consensus test: the
+current default ranker does not require multiple low-confidence tiles to agree
+before admitting a support.
 
-- Awn Studio still collects observations down to `SOURCE_OBSERVATION_FLOOR=0.05`
-  and writes `lowconf/evidence_snapshot.json`;
-- `physical_closeout.py` still accepts `lowconf_main_root` and
-  `lowconf_tail_root`, but explicitly marks them legacy-only and does not use
-  them in Unified Growth.
+There is one important boundary: the normal Workbench physical route is built from
+the primary evidence snapshot, filtered at `PRIMARY_CONFIDENCE=0.25`. The
+additional 0.05--0.25 observations are still written to
+`lowconf/evidence_snapshot.json`, but `physical_closeout.py` does not feed that
+separate snapshot into Unified Growth.
 
-Assessment: **best treasure candidate**. The data are already being produced and
-then discarded by the current physical route. A validation-only experiment should
-test low-confidence evidence as an abstaining fallback for cases where the primary
-support pool has a genuine gap. It should not be enabled globally without
-validation because weak detections can also introduce background/grid fragments.
+Therefore the correct conclusion is not "Unified Growth has no low-confidence
+logic." It **does** have confidence-aware evidence ranking and overlap-based support
+fusion. What it does not currently have is the old special rescue mechanism that
+allows sub-primary-threshold evidence back in only after multi-tile structural
+consensus.
 
-Priority: **HIGH, experiment next**.
+Decision for now: **do not port the old low-confidence consensus stage**. It would
+duplicate a substantial part of the current confidence-aware Growth design. Keep the
+old implementation archived; revisit only if a validation failure is specifically
+shown to require evidence in the 0.05--0.25 band.
 
 ---
 
