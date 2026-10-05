@@ -73,7 +73,6 @@ def run_unified_growth_page(
         x_period_px_5mm=float(cal["x"]),
         y_period_px_5mm=float(cal["y"]),
         forced_attachments=forced_spikelet_attachments,
-        evidence_by_id=evidence_by_id,
         page_width_px=(
             int(cal["page_width_px"])
             if cal.get("page_width_px") is not None
