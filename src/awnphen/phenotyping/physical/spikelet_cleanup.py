@@ -12,6 +12,7 @@ from typing import Mapping, Sequence
 
 import math
 import numpy as np
+from shapely.geometry import box
 
 from awnphen.core.domain.physical import DetectionEvidence, PhysicalSpikelet
 from awnphen.core.domain.physical_provenance import (
@@ -269,8 +270,11 @@ def layout_free_policy_summary():
 
 # ---- page-border diagnostics ---------------------------------------------
 BORDER_CONTACT_TOLERANCE_PX = 2.0
-BORDER_PARALLEL_ASPECT_MIN = 2.0
-BORDER_ARTIFACT_IMPLEMENTATION = "phase4c_border_strip_diagnostic_v1"
+BORDER_AXIS_ANGLE_TOLERANCE_DEG = 15.0
+BORDER_FOLLOWING_FRACTION_MIN = 0.60
+BORDER_BAND_FRACTION = 0.002
+BORDER_BAND_MIN_PX = 4.0
+BORDER_ARTIFACT_IMPLEMENTATION = "border_following_v3"
 
 
 class BorderSide(str, Enum):
@@ -286,7 +290,7 @@ class BorderArtifactDiagnostic:
     touches_border: bool
     touched_sides: tuple[BorderSide, ...]
     border_parallel: bool
-    isolated_small_suspicious: bool
+    border_following_fraction: float
     suspect_border_artifact: bool
     bbox_width_px: float
     bbox_height_px: float
@@ -296,34 +300,33 @@ class BorderArtifactDiagnostic:
 def evaluate_border_artifact(
     *,
     physical_spikelet_id: str,
-    isolated_small_suspicious: bool,
     geometry,
     page_width_px: int,
     page_height_px: int,
     contact_tolerance_px: float = BORDER_CONTACT_TOLERANCE_PX,
-    parallel_aspect_min: float = BORDER_PARALLEL_ASPECT_MIN,
+    axis_angle_tolerance_deg: float = BORDER_AXIS_ANGLE_TOLERANCE_DEG,
+    following_fraction_min: float = BORDER_FOLLOWING_FRACTION_MIN,
 ) -> BorderArtifactDiagnostic:
-    """Evaluate whether a spikelet candidate behaves like a page-edge strip.
+    """Reject a candidate only when it follows a page edge for most of its length.
 
-    A hard "touch border == false positive" rule is intentionally forbidden.
-    We require three independent facts:
-    1. direct page-boundary contact,
-    2. the existing layout-free evaluator already considers it an isolated
-       small candidate,
-    3. its bounding-box major axis runs parallel to the touched page border.
-
-    This preserves normal spikelets that merely happen to touch a page edge.
+    The rule intentionally ignores candidate size and local-neighbour status.
+    A border artifact must touch the page, have a major axis nearly parallel to
+    that edge, and keep a large fraction of its longitudinal span inside a narrow
+    edge band.
     """
     width = float(page_width_px)
     height = float(page_height_px)
     if width <= 0.0 or height <= 0.0:
         raise ValueError("page dimensions must be positive")
     tolerance = float(contact_tolerance_px)
-    aspect_min = float(parallel_aspect_min)
+    angle_tolerance = float(axis_angle_tolerance_deg)
+    following_min = float(following_fraction_min)
     if tolerance < 0.0:
         raise ValueError("contact_tolerance_px must be >= 0")
-    if aspect_min <= 1.0:
-        raise ValueError("parallel_aspect_min must be > 1")
+    if not 0.0 <= angle_tolerance < 90.0:
+        raise ValueError("axis_angle_tolerance_deg must be in [0, 90)")
+    if not 0.0 < following_min <= 1.0:
+        raise ValueError("following_fraction_min must be in (0, 1]")
 
     min_x, min_y, max_x, max_y = map(float, geometry.bounds)
     bbox_width = max(0.0, max_x - min_x)
@@ -341,36 +344,64 @@ def evaluate_border_artifact(
     )
     boundary_distance = min(distances.values())
 
-    horizontal_parallel = (
-        bbox_height > 0.0
-        and bbox_width / bbox_height >= aspect_min
-    )
-    vertical_parallel = (
-        bbox_width > 0.0
-        and bbox_height / bbox_width >= aspect_min
-    )
-    border_parallel = any(
-        (
-            side in {BorderSide.TOP, BorderSide.BOTTOM}
-            and horizontal_parallel
-        )
-        or (
-            side in {BorderSide.LEFT, BorderSide.RIGHT}
-            and vertical_parallel
-        )
-        for side in touched
-    )
+    rect = geometry.minimum_rotated_rectangle
+    pts = np.asarray(rect.exterior.coords[:-1], dtype=float)
+    vectors = np.roll(pts, -1, axis=0) - pts
+    lengths = np.linalg.norm(vectors, axis=1)
+    axis = vectors[int(np.argmax(lengths))] if len(vectors) else np.asarray([1.0, 0.0])
+    axis_norm = float(np.linalg.norm(axis))
+    axis = axis / axis_norm if axis_norm > 0.0 else np.asarray([1.0, 0.0])
+
+    band_px = max(BORDER_BAND_MIN_PX, BORDER_BAND_FRACTION * min(width, height))
+    following_fractions = []
+    parallel_sides = []
+    for side in touched:
+        horizontal = side in {BorderSide.TOP, BorderSide.BOTTOM}
+        tangent = np.asarray([1.0, 0.0]) if horizontal else np.asarray([0.0, 1.0])
+        dot = abs(float(np.dot(axis, tangent)))
+        angle = math.degrees(math.acos(max(0.0, min(1.0, dot))))
+        if angle > angle_tolerance:
+            continue
+
+        if side is BorderSide.LEFT:
+            band = box(0.0, 0.0, band_px, height)
+            total_span = bbox_height
+        elif side is BorderSide.RIGHT:
+            band = box(width - band_px, 0.0, width, height)
+            total_span = bbox_height
+        elif side is BorderSide.TOP:
+            band = box(0.0, 0.0, width, band_px)
+            total_span = bbox_width
+        else:
+            band = box(0.0, height - band_px, width, height)
+            total_span = bbox_width
+
+        overlap = geometry.intersection(band)
+        if overlap.is_empty or total_span <= 0.0:
+            fraction = 0.0
+        else:
+            ov_min_x, ov_min_y, ov_max_x, ov_max_y = map(float, overlap.bounds)
+            overlap_span = (
+                ov_max_x - ov_min_x
+                if horizontal
+                else ov_max_y - ov_min_y
+            )
+            fraction = max(0.0, min(1.0, overlap_span / total_span))
+        parallel_sides.append(side)
+        following_fractions.append(fraction)
+
+    border_following_fraction = max(following_fractions, default=0.0)
+    border_parallel = bool(parallel_sides)
     suspect = bool(
-        touched
-        and bool(isolated_small_suspicious)
-        and border_parallel
+        border_parallel
+        and border_following_fraction >= following_min
     )
     return BorderArtifactDiagnostic(
         physical_spikelet_id=str(physical_spikelet_id),
         touches_border=bool(touched),
         touched_sides=touched,
         border_parallel=border_parallel,
-        isolated_small_suspicious=bool(isolated_small_suspicious),
+        border_following_fraction=float(border_following_fraction),
         suspect_border_artifact=suspect,
         bbox_width_px=bbox_width,
         bbox_height_px=bbox_height,
@@ -611,9 +642,6 @@ def evaluate_physical_spikelet_cleanup(
         if page_width_px is not None and page_height_px is not None:
             border_diagnostic = evaluate_border_artifact(
                 physical_spikelet_id=str(spikelet.physical_spikelet_id),
-                isolated_small_suspicious=bool(
-                    record["isolated_small_suspicious"]
-                ),
                 geometry=spikelet.geometry,
                 page_width_px=int(page_width_px),
                 page_height_px=int(page_height_px),
@@ -661,8 +689,7 @@ def evaluate_physical_spikelet_cleanup(
                     and page_height_px is not None
                 ),
                 "border_artifact_policy": (
-                    "touch_border + isolated_small_suspicious + "
-                    "border_parallel"
+                    "touch_border + axis_parallel + high_border_following_fraction"
                 ),
             },
             evidence={
@@ -678,8 +705,8 @@ def evaluate_physical_spikelet_cleanup(
                             for side in border_diagnostic.touched_sides
                         ],
                         "border_parallel": border_diagnostic.border_parallel,
-                        "isolated_small_suspicious": (
-                            border_diagnostic.isolated_small_suspicious
+                        "border_following_fraction": (
+                            border_diagnostic.border_following_fraction
                         ),
                         "suspect_border_artifact": (
                             border_diagnostic.suspect_border_artifact
@@ -781,7 +808,10 @@ __all__ = [
     "layout_free_policy_summary",
     "BORDER_ARTIFACT_IMPLEMENTATION",
     "BORDER_CONTACT_TOLERANCE_PX",
-    "BORDER_PARALLEL_ASPECT_MIN",
+    "BORDER_AXIS_ANGLE_TOLERANCE_DEG",
+    "BORDER_FOLLOWING_FRACTION_MIN",
+    "BORDER_BAND_FRACTION",
+    "BORDER_BAND_MIN_PX",
     "BorderArtifactDiagnostic",
     "BorderSide",
     "evaluate_border_artifact",
