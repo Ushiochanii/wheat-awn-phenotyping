@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 import numpy as np
+from shapely import affinity
 from shapely.geometry.base import BaseGeometry
 from shapely.ops import unary_union
 
@@ -24,6 +25,11 @@ SPIKELET_PREMERGE_IMPLEMENTATION = "awnphen_next.spikelet_premerge_v1"
 class SpikeletPremergeConfig:
     # User-selected physical cleanup minimum; areas below 10 mm² are rejected.
     tiny_area_mm2: float = 10.0
+    # Conservative joint upper envelope derived from train+validation spikelet GT.
+    # Either trait alone may be biologically plausible; reject only when both are
+    # beyond the observed normal envelope.
+    max_area_mm2: float = 250.0
+    max_major_axis_mm: float = 45.0
     max_awn_overlap_fraction: float = 0.50
     max_fragment_gap_mm: float = 2.0
     max_fragment_area_ratio: float = 0.25
@@ -36,6 +42,7 @@ class SpikeletFilterDecision:
     hypothesis_id: str
     reasons: tuple[str, ...]
     area_mm2: float
+    major_axis_mm: float
     awn_overlap_fraction: float
 
 
@@ -77,6 +84,26 @@ def _axis_angle_deg(first: BaseGeometry, second: BaseGeometry) -> float:
 
 def _overlap_small(first: BaseGeometry, second: BaseGeometry) -> float:
     return float(first.intersection(second).area / max(min(first.area, second.area), 1e-9))
+
+
+def _major_axis_length_mm(
+    geometry: BaseGeometry,
+    *,
+    x_period_px_5mm: float,
+    y_period_px_5mm: float,
+) -> float:
+    physical = affinity.scale(
+        geometry,
+        xfact=5.0 / float(x_period_px_5mm),
+        yfact=5.0 / float(y_period_px_5mm),
+        origin=(0.0, 0.0),
+    )
+    rect = physical.minimum_rotated_rectangle
+    pts = np.asarray(rect.exterior.coords[:-1], dtype=float)
+    if len(pts) < 2:
+        return 0.0
+    edges = np.linalg.norm(np.roll(pts, -1, axis=0) - pts, axis=1)
+    return float(np.max(edges))
 
 
 def preprocess_spikelet_hypotheses(
@@ -124,6 +151,11 @@ def preprocess_spikelet_hypotheses(
         area_mm2 = float(item.geometry.area) * 25.0 / (
             float(x_period_px_5mm) * float(y_period_px_5mm)
         )
+        major_axis_mm = _major_axis_length_mm(
+            item.geometry,
+            x_period_px_5mm=x_period_px_5mm,
+            y_period_px_5mm=y_period_px_5mm,
+        )
         awn_overlap = (
             float(item.geometry.intersection(awn_union).area / max(item.geometry.area, 1e-9))
             if not awn_union.is_empty
@@ -132,6 +164,8 @@ def preprocess_spikelet_hypotheses(
         reasons: list[str] = []
         if area_mm2 < config.tiny_area_mm2:
             reasons.append("tiny_area")
+        if area_mm2 > config.max_area_mm2 and major_axis_mm > config.max_major_axis_mm:
+            reasons.append("oversized_area_and_length")
         if awn_overlap >= config.max_awn_overlap_fraction:
             reasons.append("awn_overlap_contamination")
         if reasons:
@@ -141,6 +175,7 @@ def preprocess_spikelet_hypotheses(
                     hypothesis_id=str(item.hypothesis_id),
                     reasons=tuple(reasons),
                     area_mm2=area_mm2,
+                    major_axis_mm=major_axis_mm,
                     awn_overlap_fraction=awn_overlap,
                 )
             )
@@ -264,6 +299,8 @@ def preprocess_spikelet_hypotheses(
             status="attached",
             parameters={
                 "tiny_area_mm2": config.tiny_area_mm2,
+                "max_area_mm2": config.max_area_mm2,
+                "max_major_axis_mm": config.max_major_axis_mm,
                 "max_awn_overlap_fraction": config.max_awn_overlap_fraction,
                 "max_fragment_gap_mm": config.max_fragment_gap_mm,
                 "max_fragment_area_ratio": config.max_fragment_area_ratio,
