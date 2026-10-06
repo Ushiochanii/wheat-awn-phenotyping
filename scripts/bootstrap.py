@@ -12,6 +12,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 VENV = ROOT / ".venv"
+BOOTSTRAP_TOOLS = ROOT / ".bootstrap-tools"
 
 INTEL_MAC_MAX_PYTHON = (3, 12)
 INTEL_MAC_PYTHON_CANDIDATES = ("python3.12", "python3.11", "python3.10")
@@ -85,6 +86,50 @@ def _find_environment_manager() -> str | None:
     return None
 
 
+def _uv_executable(root: Path) -> Path:
+    if os.name == "nt":
+        return root / "Scripts" / "uv.exe"
+    return root / "bin" / "uv"
+
+
+def _create_intel_mac_venv_with_uv(uv: str | Path) -> bool:
+    """Use uv's managed CPython build instead of relying on system Python."""
+    print("[1/5] Installing managed Python 3.12 for Intel macOS with uv")
+    subprocess.check_call([str(uv), "python", "install", "3.12"])
+    subprocess.check_call([str(uv), "venv", "--python", "3.12", str(VENV)])
+    if not _intel_mac_python_compatible(venv_python()):
+        raise RuntimeError("uv created an environment without a compatible Python 3.12 runtime")
+    return True
+
+
+def _bootstrap_uv() -> Path:
+    """Install uv into an isolated throwaway environment using the current Python."""
+    if BOOTSTRAP_TOOLS.exists():
+        shutil.rmtree(BOOTSTRAP_TOOLS)
+    print("  Helper: bootstrapping uv so Python 3.12 can be installed automatically")
+    subprocess.check_call([sys.executable, "-m", "venv", str(BOOTSTRAP_TOOLS)])
+    helper_python = (
+        BOOTSTRAP_TOOLS / "Scripts" / "python.exe"
+        if os.name == "nt"
+        else BOOTSTRAP_TOOLS / "bin" / "python"
+    )
+    subprocess.check_call(
+        [
+            str(helper_python),
+            "-m",
+            "pip",
+            "--disable-pip-version-check",
+            "install",
+            "--prefer-binary",
+            "uv",
+        ]
+    )
+    uv = _uv_executable(BOOTSTRAP_TOOLS)
+    if not uv.exists():
+        raise RuntimeError(f"uv installation did not create {uv}")
+    return uv
+
+
 def _remove_incompatible_venv() -> None:
     python = venv_python()
     if not VENV.exists() or not python.exists():
@@ -116,25 +161,60 @@ def _create_intel_mac_venv() -> bool:
         subprocess.check_call([compatible_python, "-m", "venv", str(VENV)])
         return True
 
+    errors: list[str] = []
+
+    uv = shutil.which("uv")
+    if uv:
+        try:
+            return _create_intel_mac_venv_with_uv(uv)
+        except (OSError, RuntimeError, subprocess.CalledProcessError) as error:
+            errors.append(f"uv: {error}")
+            if VENV.exists():
+                shutil.rmtree(VENV)
+
+    try:
+        helper_uv = _bootstrap_uv()
+        try:
+            return _create_intel_mac_venv_with_uv(helper_uv)
+        finally:
+            shutil.rmtree(BOOTSTRAP_TOOLS, ignore_errors=True)
+    except (OSError, RuntimeError, subprocess.CalledProcessError) as error:
+        errors.append(f"bootstrapped uv: {error}")
+        shutil.rmtree(BOOTSTRAP_TOOLS, ignore_errors=True)
+        if VENV.exists():
+            shutil.rmtree(VENV)
+
     manager = _find_environment_manager()
     if manager:
         manager_name = Path(manager).name
         print(
-            f"[1/5] Python 3.10-3.12 was not found. "
-            f"Creating a Python 3.12 environment with {manager_name}: {VENV}"
+            f"[1/5] uv fallback failed. Trying {manager_name} with an explicit conda-forge channel"
         )
-        subprocess.check_call(
-            [manager, "create", "-y", "-p", str(VENV), "python=3.12", "pip"]
-        )
-        return True
+        command = [
+            manager,
+            "create",
+            "-y",
+            "-p",
+            str(VENV),
+            "-c",
+            "conda-forge",
+            "python=3.12",
+            "pip",
+        ]
+        try:
+            subprocess.check_call(command)
+            return True
+        except (OSError, subprocess.CalledProcessError) as error:
+            errors.append(f"{manager_name}: {error}")
+            if VENV.exists():
+                shutil.rmtree(VENV)
 
+    details = "; ".join(errors) if errors else "no compatible Python installer was found"
     raise SystemExit(
         "Intel macOS needs Python 3.10-3.12 because PyTorch no longer publishes "
-        "Intel-macOS wheels for Python 3.13+. Install Python 3.12 and rerun this "
-        "script, for example with 'brew install python@3.12' followed by "
-        "'python3.12 scripts/bootstrap.py'. If you use micromamba/conda, making "
-        "that command available on PATH lets this installer create the compatible "
-        "environment automatically."
+        "Intel-macOS wheels for Python 3.13+. Automatic compatibility setup failed "
+        f"({details}). Install Python 3.12 and rerun this script, for example with "
+        "'brew install python@3.12' followed by 'python3.12 scripts/bootstrap.py'."
     )
 
 
