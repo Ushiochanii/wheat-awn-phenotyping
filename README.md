@@ -117,7 +117,7 @@ The centerline is normalized at the spikelet base, simplified where needed for s
 
 ## 🚀 Getting started
 
-You only need **Python 3.10+** and **Git**. Python 3.10–3.12 are currently covered by the release test matrix; newer Python versions are allowed and the installer will continue when the required wheels are available. The installer is validated on Windows and Linux x86_64 and on macOS, including Apple Silicon.
+You only need **Python 3.10+** and **Git**. Python 3.10–3.12 are currently covered by the release test matrix. On current Windows, Linux, and Apple Silicon macOS systems, newer Python versions may also work when compatible wheels are available. **Intel Macs use a compatibility runtime:** the installer selects Python 3.10–3.12 and pins the final Intel-macOS PyTorch/torchvision wheel pair (PyTorch 2.2.2 / torchvision 0.17.2).
 
 ### 1. Install Awn Studio
 
@@ -129,7 +129,7 @@ cd wheat-awn-phenotyping
 python scripts/bootstrap.py
 ```
 
-The setup script performs a platform and disk-space preflight, creates an isolated environment, installs the required packages, downloads the default model, and checks that Awn Studio is ready to run. On Apple Silicon Macs, Awn Studio automatically uses the PyTorch MPS backend when it is available; otherwise it falls back to CPU. Windows and Linux installations remain portable by default, while an existing compatible GPU-enabled PyTorch environment can be retained with `--keep-torch`.
+The setup script performs a platform and disk-space preflight, creates an isolated environment, installs the required packages, downloads the default model, and checks that Awn Studio is ready to run. On Apple Silicon Macs, Awn Studio automatically uses the PyTorch MPS backend when it is available; otherwise it falls back to CPU. On Intel Macs, if setup is launched from Python 3.13+ the installer first looks for Python 3.12/3.11/3.10; when none is installed but `micromamba`, `mamba`, or `conda` is available, it automatically creates a Python 3.12 `.venv`. Existing failed Python 3.13 Intel-Mac `.venv` directories are recreated automatically. Windows and Linux installations remain portable by default, while an existing compatible GPU-enabled PyTorch environment can be retained with `--keep-torch`.
 
 ### 2. Launch Awn Studio
 
