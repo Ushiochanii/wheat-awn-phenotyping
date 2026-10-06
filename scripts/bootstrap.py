@@ -132,7 +132,11 @@ def _bootstrap_uv() -> Path:
 
 def _remove_incompatible_venv() -> None:
     python = venv_python()
-    if not VENV.exists() or not python.exists():
+    if not VENV.exists():
+        return
+    if not python.exists():
+        print("[1/5] Existing .venv is incomplete; recreating it.")
+        shutil.rmtree(VENV)
         return
     if _intel_mac_python_compatible(python):
         return
