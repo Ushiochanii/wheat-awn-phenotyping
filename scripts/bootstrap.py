@@ -60,6 +60,16 @@ def _intel_mac_python_compatible(executable: str | Path) -> bool:
     return version is not None and (3, 10) <= version <= INTEL_MAC_MAX_PYTHON
 
 
+def _python_has_pip(executable: str | Path) -> bool:
+    probe = subprocess.run(
+        [str(executable), "-m", "pip", "--version"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    return probe.returncode == 0
+
+
 def _find_intel_mac_python() -> str | None:
     candidates: list[str] = [sys.executable]
     for name in INTEL_MAC_PYTHON_CANDIDATES:
@@ -97,8 +107,27 @@ def _create_intel_mac_venv_with_uv(uv: str | Path) -> bool:
     print("[1/5] Installing managed Python 3.12 for Intel macOS with uv")
     subprocess.check_call([str(uv), "python", "install", "3.12"])
     subprocess.check_call([str(uv), "venv", "--python", "3.12", str(VENV)])
-    if not _intel_mac_python_compatible(venv_python()):
+    python = venv_python()
+    if not _intel_mac_python_compatible(python):
         raise RuntimeError("uv created an environment without a compatible Python 3.12 runtime")
+
+    # uv intentionally creates minimal virtual environments without pip by default.
+    # Awn Studio's remaining bootstrap uses python -m pip, so seed pip explicitly.
+    print("  Helper: seeding pip into the managed Python 3.12 environment")
+    subprocess.check_call(
+        [
+            str(uv),
+            "pip",
+            "install",
+            "--python",
+            str(python),
+            "pip",
+            "setuptools",
+            "wheel",
+        ]
+    )
+    if not _python_has_pip(python):
+        raise RuntimeError("uv created Python 3.12 but pip could not be seeded into .venv")
     return True
 
 
@@ -139,6 +168,10 @@ def _remove_incompatible_venv() -> None:
         shutil.rmtree(VENV)
         return
     if _intel_mac_python_compatible(python):
+        if _python_has_pip(python):
+            return
+        print("[1/5] Existing Intel macOS .venv has no pip; recreating it.")
+        shutil.rmtree(VENV)
         return
 
     version = _python_minor(python)
