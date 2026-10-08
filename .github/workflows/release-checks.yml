@@ -4,49 +4,40 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 jobs:
-  release-checks:
+  release-tests:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.10", "3.12"]
-
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-
-      - name: Install lightweight test tools
-        run: python -m pip install --upgrade pytest build
-
+      - name: Install project and test tools
+        run: python -m pip install --upgrade -e ".[dev]"
       - name: Run release tests
-        env:
-          PYTHONPATH: src
         run: python -m pytest -q
-
       - name: Check JavaScript syntax
         run: |
           node --check app/awn_studio/app.mjs
           node --check app/awn_studio/workflow.mjs
           node --check app/awn_studio/inference_client.mjs
           node --check src/awnphen/_bundle/app/awn_studio/app.mjs
-
       - name: Build wheel
         run: python -m build --wheel
-
       - name: Verify bundled assets
         run: |
           python - <<'PY'
           from pathlib import Path
           import zipfile
-
           wheel = next(Path("dist").glob("awnphen-*.whl"))
           with zipfile.ZipFile(wheel) as archive:
               names = set(archive.namelist())
@@ -60,40 +51,45 @@ jobs:
           print(f"Verified {wheel.name}")
           PY
 
-
-  macos-bootstrap-smoke:
-    runs-on: macos-latest
+  cpu-bootstrap-smoke:
+    name: CPU bootstrap (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
       - name: Bootstrap Awn Studio without model download
         run: python scripts/bootstrap.py --no-model-download
-
-      - name: Verify macOS runtime
+      - name: Verify installed runtime
+        shell: bash
         run: |
-          .venv/bin/python - <<'PY'
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            PY=".venv/Scripts/python.exe"
+          else
+            PY=".venv/bin/python"
+          fi
+          "$PY" - <<'PY'
           from pathlib import Path
           import platform
           import torch
           import awnphen
           from awnphen.cli import _runtime_check
-
           missing, weights = _runtime_check(download_model=False)
           assert missing == []
           assert weights is None
-          assert platform.system() == "Darwin"
-
           root = Path(awnphen.__file__).resolve().parent
           assert (root / "_bundle" / "app" / "awn_studio" / "serve_model.py").is_file()
-
-          if platform.machine().lower() in {"arm64", "aarch64"}:
-              print("Apple Silicon runner detected")
-              print("MPS built:", torch.backends.mps.is_built())
-              print("MPS available:", torch.backends.mps.is_available())
-
-          print("macOS bootstrap smoke passed")
+          if platform.system() in {"Linux", "Windows"}:
+              assert torch.version.cuda is None, torch.version.cuda
+              assert getattr(torch.version, "hip", None) is None, getattr(torch.version, "hip", None)
+              assert not torch.cuda.is_available()
+              print("Verified CPU-only PyTorch runtime")
+          else:
+              print("Verified macOS runtime (no CUDA/ROCm dependency)")
+          print("Awn Studio bootstrap smoke passed")
           PY
